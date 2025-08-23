@@ -37,6 +37,11 @@
   <canvas id="stickMeter" width="80" height="80" style="position:absolute; top:100px; left:10px;"></canvas>
   <canvas id="pitchMeter" width="80" height="80" style="position:absolute; top:190px; left:10px;"></canvas>
   <canvas id="mapArea" width="300" height="300" style="position:absolute; top:10px; left:150px;"></canvas>
+  <div id="spoilerControl" style="position:absolute; right:20px; bottom:20px; background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc;">
+    <label for="spoilerSlider">スポイラー展開率</label>
+    <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="vertical-align:middle;">
+    <span id="spoilerValue">0</span>%
+  </div>
 
   <script>
     const bankCanvas = document.getElementById("bankMeter");
@@ -58,6 +63,8 @@
     let altitude = 100;
     let velocity = 100;
     let deg = -90;
+    let spoilerRatio = 0.0; // スポイラー展開率（0.0〜1.0）
+
     const updateInterval = 200;
 
     function handleOrientation(event) {
@@ -98,7 +105,7 @@
     function drawBankMeter(angle) {
       const cx = bankCanvas.width / 2;
       const cy = bankCanvas.height / 2;
-      const r = 50;
+      const r = bankCanvas.height / 2;
       bankCtx.clearRect(0, 0, bankCanvas.width, bankCanvas.height);
       bankCtx.beginPath();
       bankCtx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -118,13 +125,13 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 6`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 7`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
       const cx = pitchCanvas.width / 2;
       const cy = pitchCanvas.height / 2;
-      const r = 50;
+      const r = pitchCanvas.height / 2;
       pitchCtx.clearRect(0, 0, pitchCanvas.width, pitchCanvas.height);
       pitchCtx.beginPath();
       pitchCtx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -150,14 +157,14 @@
     function drawStickMeter(angle) {
       const cx = stickCanvas.width / 2;
       const cy = stickCanvas.height / 2;
-      const r = 50;
+      const r = stickCanvas.height / 2;
       stickCtx.clearRect(0, 0, stickCanvas.width, stickCanvas.height);
       stickCtx.beginPath();
       stickCtx.arc(cx, cy, r, 0, Math.PI * 2);
       stickCtx.strokeStyle = "#999";
       stickCtx.lineWidth = 2;
       stickCtx.stroke();
-      const rad = (angle + 90) * Math.PI / 180;
+      const rad = (angle + 0) *5 * Math.PI / 180; //表示５倍
       const dx = Math.sin(rad) * r;
       const dy = -Math.cos(rad) * r;
       stickCtx.beginPath();
@@ -227,6 +234,8 @@
       const pitchEffect = pitchDeg / 10.0;
       velocity -= pitchEffect * 0.8;
       altitude += pitchEffect * 1.5;
+      velocity -= spoilerRatio * 2.0;
+      altitude -= spoilerRatio * 3.0;
 
       drawBankMeter(bankDeg);
       drawStickMeter(stickDeg);
@@ -265,6 +274,12 @@
     }
 
     window.onload = update;
+    const spoilerSlider = document.getElementById('spoilerSlider');
+    const spoilerValue = document.getElementById('spoilerValue');
+    spoilerSlider.addEventListener('input', function() {
+      spoilerValue.textContent = spoilerSlider.value;
+      spoilerRatio = spoilerSlider.value;// 必要ならここでspoilerSlider.valueを使って処理
+    });
   </script>
 </body>
 </html>
