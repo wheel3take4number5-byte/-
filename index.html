@@ -100,6 +100,12 @@
       console.log("gamma:", event.gamma, "beta:", event.beta);
       pitchDeg = (event.gamma ?? 0)/-5 - 6;
       stickDeg = (event.beta ?? 90);
+      if( stickDeg < 2 && stickDeg > -2 ) stickDeg = 0;
+      if( stickDeg >= 2 ) stickDeg -= 2;
+      if( stickDeg <= -2 ) stickDeg += 2;
+      if( pitchDeg < 2 && pitchDeg > -2 ) pitchDeg = 0;
+      if( pitchDeg >= 2 ) pitchDeg -= 2;
+      if( pitchDeg <= -2 ) pitchDeg += 2;
     }
 
     function drawBankMeter(angle) {
@@ -125,7 +131,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 8`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 9`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -217,13 +223,6 @@
 
 
     function update() {
-      if( stickDeg < 2 && stickDeg > -2 ) stickDeg = 0;
-      if( stickDeg >= 2 ) stickDeg -= 2;
-      if( stickDeg <= -2 ) stickDeg += 2;
-      if( pitchDeg < 2 && pitchDeg > -2 ) pitchDeg = 0;
-      if( pitchDeg >= 2 ) pitchDeg -= 2;
-      if( pitchDeg <= -2 ) pitchDeg += 2;   
-
       bankDeg += (stickDeg - 0) / 20;
       if(bankDeg > 90) bankDeg = 90;
       if(bankDeg < -90) bankDeg = -90;
@@ -241,8 +240,8 @@
       const pitchEffect = pitchDeg / 10.0;
       velocity -= pitchEffect * 0.8;
       altitude += pitchEffect * 1.5;
-      velocity -= spoilerRatio * 0.2;
-      altitude -= spoilerRatio * 0.3;
+      velocity -= spoilerRatio * 0.02;
+      altitude -= spoilerRatio * 0.03;
 
       drawBankMeter(bankDeg);
       drawStickMeter(stickDeg);
@@ -259,7 +258,7 @@
       } else if(velocity < 40) {
         info.textContent += " (失速)";
         retuern; // 失速したら更新停止
-      } else if(velocity > 50) {
+      } else if(velocity < 50) {
         info.textContent += " (失速注意)";
       } else if(Math.abs(bankDeg) > 45) {
         info.textContent += " (横転注意)";
