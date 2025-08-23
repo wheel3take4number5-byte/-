@@ -115,7 +115,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 2`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -179,7 +179,7 @@
 
 
     function update() {
-      bankDeg += (stickDeg) / 10;
+      bankDeg += (stickDeg - 90) / 10;
       deg += bankDeg / 5;
       const rad = deg * Math.PI / 180;
       const speed = velocity / 100 / 2;
@@ -198,7 +198,7 @@
       drawBankMeter(bankDeg);
       drawPitchMeter(pitchDeg);
       drawGlider();
-      info.textContent = `バンク: ${Math.round(bankDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
+      info.textContent = `バンク: ${Math.round(stickDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
       if(altitude < 0) {
         info.textContent += " (着陸しました)";
         return; // 着陸したら更新停止
