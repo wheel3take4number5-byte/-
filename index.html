@@ -58,7 +58,7 @@
 
     function handleOrientation(event) {
       pitchDeg = event.gamma || 0;
-      bankDeg = (event.beta || 90) - 90;
+      bankDeg = (event.beta || 90);
     }
 
     permissionBtn.onclick = () => {
@@ -88,7 +88,7 @@
     function handleOrientation(event) {
       console.log("gamma:", event.gamma, "beta:", event.beta);
       pitchDeg = event.gamma ?? 0;
-      bankDeg = (event.beta ?? 90) - 90;
+      bankDeg = (event.beta ?? 90);
     }
 
     function drawBankMeter(angle) {
@@ -114,7 +114,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 2`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
