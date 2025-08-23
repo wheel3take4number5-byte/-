@@ -34,12 +34,15 @@
   <div id="info">状態: 初期化中</div>
   <button id="permissionBtn">センサー許可 </button>
   <canvas id="bankMeter" width="120" height="120" style="position:absolute; top:10px; left:10px;"></canvas>
-  <canvas id="pitchMeter" width="120" height="120" style="position:absolute; top:140px; left:10px;"></canvas>
+  <canvas id="stickMeter" width="120" height="120" style="position:absolute; top:140px; left:10px;"></canvas>
+  <canvas id="pitchMeter" width="120" height="120" style="position:absolute; top:270px; left:10px;"></canvas>
   <canvas id="mapArea" width="300" height="300" style="position:absolute; top:10px; left:150px;"></canvas>
 
   <script>
     const bankCanvas = document.getElementById("bankMeter");
     const bankCtx = bankCanvas.getContext("2d");
+    const stickCanvas = document.getElementById("stickMeter");
+    const stickCtx = stickCanvas.getContext("2d");
     const pitchCanvas = document.getElementById("pitchMeter");
     const pitchCtx = pitchCanvas.getContext("2d");
     const mapCanvas = document.getElementById("mapArea");
@@ -115,7 +118,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 4`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -143,6 +146,34 @@
       pitchCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 16);
       pitchCtx.fillText(`ピッチ`, cx, cy - r + 25);
     }
+
+    function drawStickMeter(angle) {
+      const cx = stickCanvas.width / 2;
+      const cy = stickCanvas.height / 2;
+      const r = 50;
+      stickCtx.clearRect(0, 0, stickCanvas.width, stickCanvas.height);
+      stickCtx.beginPath();
+      stickCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      stickCtx.strokeStyle = "#999";
+      stickCtx.lineWidth = 2;
+      stickCtx.stroke();
+      const rad = (angle + 90) * Math.PI / 180;
+      const dx = Math.sin(rad) * r;
+      const dy = -Math.cos(rad) * r;
+      stickCtx.beginPath();
+      stickCtx.moveTo(cx, cy);
+      stickCtx.lineTo(cx + dx, cy + dy);
+      stickCtx.strokeStyle = "orange";
+      stickCtx.lineWidth = 3;
+      stickCtx.stroke();
+      stickCtx.font = "14px sans-serif";
+      stickCtx.fillStyle = "#000";
+      stickCtx.textAlign = "center";
+      pitchstickCtxCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 16);
+      stickCtx.fillText(`桿`, cx, cy - r + 25);
+    }
+
+
 
     const mapImg = new Image();
     mapImg.src = "menuma-Map.png"; // ファイル名は適宜調整
@@ -198,6 +229,7 @@
       altitude += pitchEffect * 1.5;
 
       drawBankMeter(bankDeg);
+      drawStickMeter(stickDeg);
       drawPitchMeter(pitchDeg);
       drawGlider();
       info.textContent = `バンク: ${Math.round(stickDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
@@ -208,10 +240,11 @@
         info.textContent += " (高度注意)";
       } else if(altitude > 300) {
         info.textContent += " (高度オーバー)";
-      } else if(velocity < 20) {
+      } else if(velocity < 40) {
+        info.textContent += " (失速)";
+        retuern; // 失速したら更新停止
+      } else if(velocity > 50) {
         info.textContent += " (失速注意)";
-      } else if(velocity > 200) {
-        info.textContent += " (速度オーバー)";
       } else if(Math.abs(bankDeg) > 45) {
         info.textContent += " (横転注意)";
       } else if(Math.abs(bankDeg) > 30) {
