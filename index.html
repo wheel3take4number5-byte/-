@@ -143,13 +143,16 @@
       pitchCtx.fillText(`ピッチ`, cx, cy - r + 25);
     }
 
+    const planeImg = new Image();
+    planeImg.src = "Glider5.png"; // 画像ファイル名を適宜変更
+
     function drawMap() {
 
       mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-      if (Glider5.complete) {
+      if (planeImg.complete) {
         // 画像の中心が(xPos, yPos)になるように描画
         const imgW = 32, imgH = 32; // 画像サイズに合わせて調整
-        mapCtx.drawImage(Glider5, xPos - imgW/2, yPos - imgH/2, imgW, imgH);
+        mapCtx.drawImage(planeImg, xPos - imgW/2, yPos - imgH/2, imgW, imgH);
       } else {
         // 画像がまだ読み込まれていない場合は丸を描画
         mapCtx.beginPath();
