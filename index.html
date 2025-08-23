@@ -146,7 +146,7 @@
     function drawMap() {
 
       mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-      if (planeImg.complete) {
+      if (Glider5.complete) {
         // 画像の中心が(xPos, yPos)になるように描画
         const imgW = 32, imgH = 32; // 画像サイズに合わせて調整
         mapCtx.drawImage(Glider5, xPos - imgW/2, yPos - imgH/2, imgW, imgH);
