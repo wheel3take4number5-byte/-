@@ -143,12 +143,19 @@
       pitchCtx.fillText(`ピッチ`, cx, cy - r + 25);
     }
 
+    const mapImg = new Image();
+    mapImg.src = "menuma-Map.png"; // ファイル名は適宜調整
+
     const planeImg = new Image();
     planeImg.src = "Glider5.png"; // 画像ファイル名を適宜変更
 
-    function drawMap() {
-
+    function drawGlider() {
       mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+      // 地図画像を背景に描画
+      if (mapImg.complete && mapImg.naturalWidth !== 0) {
+        mapCtx.drawImage(mapImg, 0, 0, mapCanvas.width, mapCanvas.height);
+      }
+
       if (planeImg.complete) {
         // 画像の中心が(xPos, yPos)になるように描画
         const imgW = 32, imgH = 32; // 画像サイズに合わせて調整
@@ -164,9 +171,9 @@
         mapCtx.fillStyle = "blue";
         mapCtx.fill();
       }
-      mapCtx.font = "12px sans-serif";
-      mapCtx.fillStyle = "#000";
-      mapCtx.fillText("機体", xPos, yPos - 15);
+      //mapCtx.font = "12px sans-serif";
+      //mapCtx.fillStyle = "#000";
+      //mapCtx.fillText("機体", xPos, yPos - 15);
     }
 
 
@@ -188,7 +195,7 @@
 
       drawBankMeter(bankDeg);
       drawPitchMeter(pitchDeg);
-      drawMap();
+      drawGlider();
       info.textContent = `バンク: ${Math.round(bankDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
 
       setTimeout(update, updateInterval);
