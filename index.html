@@ -179,7 +179,9 @@
 
 
     function update() {
-      bankDeg += (stickDeg - 90) / 10;
+      bankDeg += (stickDeg - 0) / 10;
+      if(bankDeg > 90) bankDeg = 90;
+      if(bankDeg < -90) bankDeg = -90;
       deg += bankDeg / 5;
       const rad = deg * Math.PI / 180;
       const speed = velocity / 100 / 2;
