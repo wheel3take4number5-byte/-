@@ -37,13 +37,13 @@
   <canvas id="stickMeter" width="80" height="80" style="position:absolute; top:100px; left:10px;"></canvas>
   <canvas id="pitchMeter" width="80" height="80" style="position:absolute; top:190px; left:10px;"></canvas>
   <canvas id="mapArea" width="300" height="300" style="position:absolute; top:10px; left:150px;"></canvas>
-  <div id="spoilerControl" style="position:absolute; right:20px; bottom:20px; background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc;">
-    <label for="spoilerSlider">スポイラー展開率</label>
-    <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="vertical-align:middle;">
+  <div id="spoilerControl" style="position:absolute; right:20px; bottom:20px; background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
+    <label for="spoilerSlider" style="margin-bottom:8px;">スポイラー展開率</label>
+    <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 30px; height: 120px; margin-bottom:8px;">
     <span id="spoilerValue">0</span>%
   </div>
 
-  <script>
+<script>
     const bankCanvas = document.getElementById("bankMeter");
     const bankCtx = bankCanvas.getContext("2d");
     const stickCanvas = document.getElementById("stickMeter");
@@ -166,7 +166,7 @@
       const r = stickCanvas.height / 2;
       stickCtx.clearRect(0, 0, stickCanvas.width, stickCanvas.height);
       stickCtx.beginPath();
-      stickCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      stickCtx.arc(cx, cy, r, 0, Math.PI * 1);
       stickCtx.strokeStyle = "#999";
       stickCtx.lineWidth = 2;
       stickCtx.stroke();
