@@ -48,6 +48,7 @@
     const permissionBtn = document.getElementById("permissionBtn");
 
     let bankDeg = 0;
+    let stickDeg = 0;
     let pitchDeg = 0;
     let xPos = mapCanvas.width / 2;
     let yPos = mapCanvas.height / 2;
@@ -58,7 +59,7 @@
 
     function handleOrientation(event) {
       pitchDeg = (event.gamma || 0) / -5 - 6;
-      bankDeg = (event.beta || 90);
+      stickDeg = (event.beta || 90);
     }
 
     permissionBtn.onclick = () => {
@@ -88,7 +89,7 @@
     function handleOrientation(event) {
       console.log("gamma:", event.gamma, "beta:", event.beta);
       pitchDeg = (event.gamma ?? 0)/-5 - 6;
-      bankDeg = (event.beta ?? 90);
+      stickDeg = (event.beta ?? 90);
     }
 
     function drawBankMeter(angle) {
@@ -178,9 +179,10 @@
 
 
     function update() {
+      bankDeg += (stickDeg - 180) / 10;
       deg += bankDeg / 5;
       const rad = deg * Math.PI / 180;
-      const speed = velocity / 100 * 2;
+      const speed = velocity / 100 / 2;
       xPos += Math.cos(rad) * speed;
       yPos += Math.sin(rad) * speed;
       if (xPos < 0) xPos = mapCanvas.width;
@@ -197,6 +199,32 @@
       drawPitchMeter(pitchDeg);
       drawGlider();
       info.textContent = `バンク: ${Math.round(bankDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
+      if(altitude < 0) {
+        info.textContent += " (着陸しました)";
+        return; // 着陸したら更新停止
+      } else if(altitude < 20) {
+        info.textContent += " (高度注意)";
+      } else if(altitude > 300) {
+        info.textContent += " (高度オーバー)";
+      } else if(velocity < 20) {
+        info.textContent += " (失速注意)";
+      } else if(velocity > 200) {
+        info.textContent += " (速度オーバー)";
+      } else if(Math.abs(bankDeg) > 45) {
+        info.textContent += " (横転注意)";
+      } else if(Math.abs(bankDeg) > 30) {
+        info.textContent += " (バンク注意)";
+      } else if(Math.abs(pitchDeg) > 20) {
+        info.textContent += " (ピッチ注意)";
+      } else if(Math.abs(pitchDeg) > 10) {
+        info.textContent += " (ピッチ大)";
+      } else if(Math.abs(pitchDeg) > 5) {
+        info.textContent += " (ピッチ中)";
+      } else if(Math.abs(pitchDeg) > 2) {
+        info.textContent += " (ピッチ小)";
+      } else {
+        info.textContent += " (安定飛行)";
+      } 
 
       setTimeout(update, updateInterval);
     }
