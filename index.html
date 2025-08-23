@@ -154,7 +154,7 @@
         const imgW = 32, imgH = 32; // 画像サイズに合わせて調整
         mapCtx.save();
         mapCtx.translate(xPos, yPos);
-        mapCtx.rotate(deg * Math.PI / 180); // degで回転
+        mapCtx.rotate((deg+90) * Math.PI / 180); // degで回転
         mapCtx.drawImage(planeImg, -imgW/2, -imgH/2, imgW, imgH);
         mapCtx.restore();
       } else {
