@@ -57,7 +57,7 @@
     const updateInterval = 200;
 
     function handleOrientation(event) {
-      pitchDeg = event.gamma || 0;
+      pitchDeg = (event.gamma || 0)/10+3;
       bankDeg = (event.beta || 90);
     }
 
@@ -87,7 +87,7 @@
 
     function handleOrientation(event) {
       console.log("gamma:", event.gamma, "beta:", event.beta);
-      pitchDeg = event.gamma ?? 0;
+      pitchDeg = (event.gamma ?? 0)/10 + 3;
       bankDeg = (event.beta ?? 90);
     }
 
