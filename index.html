@@ -202,6 +202,7 @@
       if (mapImg.complete && mapImg.naturalWidth !== 0) {
         mapCtx.drawImage(mapImg, 0, 0, mapCanvas.width, mapCanvas.height);
       }
+      drawRunway();
 
       if (planeImg.complete) {
         // 画像の中心が(xPos, yPos)になるように描画
@@ -259,7 +260,6 @@
       drawBankMeter(bankDeg);
       drawStickMeter(stickDeg);
       drawPitchMeter(pitchDeg);
-      drawRunway();
       drawGlider();
       info.textContent = `バンク: ${Math.round(stickDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
       if(altitude < 0) {
