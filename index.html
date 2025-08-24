@@ -133,7 +133,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 4`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -259,6 +259,7 @@
       drawBankMeter(bankDeg);
       drawStickMeter(stickDeg);
       drawPitchMeter(pitchDeg);
+      drawRunway();
       drawGlider();
       info.textContent = `バンク: ${Math.round(stickDeg)}°, ピッチ: ${Math.round(pitchDeg)}°, 高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
       if(altitude < 0) {
