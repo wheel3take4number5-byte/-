@@ -152,7 +152,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 9`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 1`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -316,64 +316,75 @@
       drawGlider();
       info.textContent = `高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
 
-      /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
-      let TDcheck;
-      TDcheck = isTouchDown();
-      if ( TDcheck == 1 ) {
-        info.innerHTML = `<div style="color:blue; font-weight:bold;">着陸</div>`;
-        restartBtn.style.display = "block"; // リスタートボタン表示
+      // メッセージ生成
+      let message = "";
+      /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway 5:Descent Rate Over */
+      let TDcheck = isTouchDown();
+      if (TDcheck == 1) {
+        message = `<span style="color:blue; font-weight:bold;">着陸</span>`;
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
       }
-      if ( TDcheck == 4 ) {
-        info.innerHTML = `<div style="color:red; font-weight:bold;">滑走路外</div>`;
-        restartBtn.style.display = "block"; // リスタートボタン表示
+      if (TDcheck == 4) {
+        message = `<span style="color:red; font-weight:bold;">滑走路外</span>`;
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
       }
-      if ( TDcheck == 2 ) {
-        info.innerHTML = `<div style="color:red; font-weight:bold;">速度超過(70Km/h)</div>`;
-        restartBtn.style.display = "block"; // リスタートボタン表示
+      if (TDcheck == 2) {
+        message = `<span style="color:red; font-weight:bold;">速度超過(70Km/h)</span>`;
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
       }
-      if ( TDcheck == 5 ) {
-        info.innerHTML = `<div style="color:red; font-weight:bold;">降下率超過(5m/s)</div>`;
-        restartBtn.style.display = "block"; // リスタートボタン表示
+      if (TDcheck == 5) {
+        message = `<span style="color:red; font-weight:bold;">降下率超過(5m/s)</span>`;
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
       }
-      if ( TDcheck == 3 ) {
-        info.innerHTML = `<div style="color:red; font-weight:bold;">進路誤差大(±10°)</div>`;
-        restartBtn.style.display = "block"; // リスタートボタン表示
+      if (TDcheck == 3) {
+        message = `<span style="color:red; font-weight:bold;">進路誤差大(±10°)</span>`;
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
       }
 
+      // 通常時のメッセージ
       if(altitude < 0) {
-        info.textContent += " (着陸しました)";
-        restartBtn.style.display = "block"; // リスタートボタン表示
-        return; // 着陸したら更新停止
+        message = "着陸しました";
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
+        return;
       } else if(altitude < 20) {
-        info.textContent += " (高度注意)";
+        message = "高度注意";
       } else if(altitude > 300) {
-        info.textContent += " (高度オーバー)";
+        message = "高度オーバー";
       } else if(velocity < 40) {
-        info.textContent += " (失速)";
-        restartBtn.style.display = "block"; // リスタートボタン表示
-        return; // 失速したら更新停止
+        message = "失速";
+        restartBtn.style.display = "block";
+        info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
+        return;
       } else if(velocity < 50) {
-        info.textContent += " (失速注意)";
+        message = "失速注意";
       } else if(Math.abs(bankDeg) > 45) {
-        info.textContent += " (横転注意)";
+        message = "横転注意";
       } else if(Math.abs(bankDeg) > 30) {
-        info.textContent += " (バンク注意)";
+        message = "バンク注意";
       } else if(Math.abs(pitchDeg) > 20) {
-        info.textContent += " (ピッチ注意)";
+        message = "ピッチ注意";
       } else if(Math.abs(pitchDeg) > 10) {
-        info.textContent += " (ピッチ大)";
+        message = "ピッチ大";
       } else if(Math.abs(pitchDeg) > 5) {
-        info.textContent += " (ピッチ中)";
+        message = "ピッチ中";
       } else if(Math.abs(pitchDeg) > 2) {
-        info.textContent += " (ピッチ小)";
+        message = "ピッチ小";
       } else {
-        info.textContent += " (安定飛行)";
-      } 
+        message = "安定飛行";
+      }
+
+      info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
 
       updateTimeoutId = setTimeout(update, updateInterval);
     }
