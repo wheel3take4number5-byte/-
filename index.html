@@ -152,7 +152,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 8`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 9`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -356,7 +356,7 @@
       } else if(velocity < 40) {
         info.textContent += " (失速)";
         restartBtn.style.display = "block"; // リスタートボタン表示
-        retuern; // 失速したら更新停止
+        return; // 失速したら更新停止
       } else if(velocity < 50) {
         info.textContent += " (失速注意)";
       } else if(Math.abs(bankDeg) > 45) {
@@ -442,31 +442,22 @@
 
   /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
   function isTouchDown(){
-    let ret = 0;
-    if (altitude <= 0 ){
-      if( velocity < 70 ){
-        if( deg > -100 && deg < -80 ) {
-          if( xPos > canvas.width / 2 - 10 && xPos < canvas.width / 2 - 10 + 20 ){
-            if( yPos > canvas.height / 2 - 50 && yPos < canvas.height / 2 - 50 + 100 ){
-              if( descentRate < 5.0 ){
-                ret = 1;
-              }else{
-                ret = 4;
-              }
-            }else{
-              ret = 4;
-            }
-          }else{
-            ret = 3;
-          }
-        }else{
-          ret = 2
-        }
-      }else{
-      	ret = 5;
-      }
-    }
-    return ret;
+    // 着陸高度でなければ未着陸
+    if (altitude > 0) return 0;
+    // 速度超過
+    if (velocity >= 70) return 2;
+    // 進路誤差大（-100°～-80°以外）
+    if (deg <= -100 || deg >= -80) return 3;
+    // 滑走路範囲外（x座標）
+    const rx = mapCanvas.width / 2 - 10;
+    if (xPos < rx || xPos > rx + 20) return 4;
+    // 滑走路範囲外（y座標）
+    const ry = mapCanvas.height / 2 - 50;
+    if (yPos < ry || yPos > ry + 100) return 4;
+    // 降下率超過
+    if (descentRate >= 5.0) return 5;
+    // すべてクリアで着陸OK
+    return 1;
   }
 
   </script>
