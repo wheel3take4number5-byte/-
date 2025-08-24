@@ -152,7 +152,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 6`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 7`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -302,6 +302,31 @@
       drawPitchMeter(pitchDeg);
       drawGlider();
       info.textContent = `高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
+
+      /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
+      let TDcheck;
+      TDcheck = isTouchDown();
+      if ( TDcheck == 1 ) {
+        info.innerHTML = `<div style="color:blue; font-weight:bold;">着陸</div>`;
+        return;
+      }
+      if ( TDcheck == 4 ) {
+        info.innerHTML = `<div style="color:red; font-weight:bold;">滑走路外</div>`;
+        return;
+      }
+      if ( TDcheck == 2 ) {
+        info.innerHTML = `<div style="color:red; font-weight:bold;">速度超過(70Km/h)</div>`;
+        return;
+      }
+      if ( TDcheck == 5 ) {
+        info.innerHTML = `<div style="color:red; font-weight:bold;">降下率超過(5m/s)</div>`;
+        return;
+      }
+      if ( TDcheck == 3 ) {
+        info.innerHTML = `<div style="color:red; font-weight:bold;">進路誤差大(±10°)</div>`;
+        return;
+      }
+
       if(altitude < 0) {
         info.textContent += " (着陸しました)";
         restartBtn.style.display = "block"; // リスタートボタン表示
@@ -392,9 +417,39 @@
       document.getElementById('permissionBtn').click();
       document.getElementById('permissionBtn').style.display = "none";
     } else {
+      document.getElementById('permissionBtn').style.display = "none";
       update();
     }  
   };
+
+  /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
+  function isTouchDown(){
+    let ret = 0;
+    if (altitude <= 0 ){
+      if( velocity < 70 ){
+        if( deg > -100 && deg < -80 ) {
+          if( xPos > canvas.width / 2 - 10 && xPos < canvas.width / 2 - 10 + 20 ){
+            if( yPos > canvas.height / 2 - 50 && yPos < canvas.height / 2 - 50 + 100 ){
+              if( descentRate < 5.0 ){
+                ret = 1;
+              }else{
+                ret = 4;
+              }
+            }else{
+              ret = 4;
+            }
+          }else{
+            ret = 3;
+          }
+        }else{
+          ret = 2
+        }
+      }else{
+      	ret = 5;
+      }
+    }
+    return ret;
+  }
 
   </script>
 </body>
