@@ -38,29 +38,31 @@
   <canvas id="pitchMeter" width="80" height="80" style="position:absolute; top:190px; left:10px;"></canvas>
   <canvas id="mapArea" width="300" height="300" style="position:absolute; top:10px; left:150px;"></canvas>
 
-  <div id="spoilerControl" style="position:absolute; right:20px; bottom:20px; background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
-    <label for="spoilerSlider" style="margin-bottom:8px;">スポイラー展開率</label>
 
-    <div id="arrowPad" style="display:flex; flex-direction:column; align-items:center; margin-bottom:8px;">
-      <button id="arrowUp" style="width:36px; height:36px;">▲</button>
-      <div style="display:flex; flex-direction:row; align-items:center;">
-        <button id="arrowLeft" style="width:36px; height:36px;">◀</button>
-        <div style="width:8px;"></div>
-        <button id="arrowRight" style="width:36px; height:36px;">▶</button>
-      </div>
-      <button id="arrowDown" style="width:36px; height:36px;">▼</button>
-    </div>
-
+<div id="rightBottomControl" style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
+  <!-- 矢印キー -->
+  <div id="arrowPad" style="display:flex; flex-direction:column; align-items:center; margin-bottom:0;">
+    <button id="arrowUp" style="width:36px; height:36px;">▲</button>
     <div style="display:flex; flex-direction:row; align-items:center;">
-      <button id="restartBtn" style="width:60px; margin-right:8px;">リスタート</button>
-      <div style="display:flex; flex-direction:column; align-items:center;">
-        <button id="spoilerPlus" style="width:40px; margin-bottom:4px;">＋5</button>
-        <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="writing-mode: vertical-lr; direction: rtl; width: 30px; height: 120px; margin-bottom:4px;">
-        <button id="spoilerMinus" style="width:40px; margin-bottom:8px;">－5</button>
-      </div>
+      <button id="arrowLeft" style="width:36px; height:36px;">◀</button>
+      <div style="width:8px;"></div>
+      <button id="arrowRight" style="width:36px; height:36px;">▶</button>
     </div>
+    <button id="arrowDown" style="width:36px; height:36px;">▼</button>
+  </div>
+  <!-- リスタートボタン -->
+  <button id="restartBtn" style="width:60px; height:120px; margin-bottom:0;">リスタート</button>
+  <!-- スポイラーコントロール -->
+  <div id="spoilerControl" style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
+    <label for="spoilerSlider" style="margin-bottom:8px;">スポイラー展開率</label>
+    <button id="spoilerPlus" style="width:40px; margin-bottom:4px;">＋5</button>
+    <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="writing-mode: vertical-lr; direction: rtl; width: 30px; height: 120px; margin-bottom:4px;">
+    <button id="spoilerMinus" style="width:40px; margin-bottom:8px;">－5</button>
     <span id="spoilerValue">0</span>%
   </div>
+</div>
+
+
 
 <script>
     const bankCanvas = document.getElementById("bankMeter");
