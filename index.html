@@ -154,7 +154,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 2`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -215,11 +215,11 @@
       const r = descentRateCanvas.height / 2;
       descentRateCtx.clearRect(0, 0, descentRateCanvas.width, descentRateCanvas.height);
       descentRateCtx.beginPath();
-      descentRateCtx.arc(cx, cy, r, Math.PI, Math.PI * 2,false);
+      descentRateCtx.arc(cx, cy, r, 0, Math.PI * 2,false);
       descentRateCtx.strokeStyle = "#999";
       descentRateCtx.lineWidth = 2;
       descentRateCtx.stroke();
-      const rad = (rate + 0) *5 * Math.PI / 180; //表示５倍
+      const rad = (rate + 0) *20 * Math.PI / 180; //表示20倍
       const dx = Math.sin(rad) * r;
       const dy = -Math.cos(rad) * r;
       descentRateCtx.beginPath();
@@ -231,7 +231,7 @@
       descentRateCtx.font = "14px sans-serif";
       descentRateCtx.fillStyle = "#000";
       descentRateCtx.textAlign = "center";
-      descentRateCtx.fillText(`${Math.round(rate)}m/s`, cx, cy + r - 16);
+      descentRateCtx.fillText(`${(Math.round(rate * 10) / 10).toFixed(1)}m/s`, cx, cy + r - 16);
       descentRateCtx.fillText(`降下率`, cx, cy - r + 25);
     }
 
