@@ -37,13 +37,30 @@
   <canvas id="stickMeter" width="80" height="80" style="position:absolute; top:100px; left:10px;"></canvas>
   <canvas id="pitchMeter" width="80" height="80" style="position:absolute; top:190px; left:10px;"></canvas>
   <canvas id="mapArea" width="300" height="300" style="position:absolute; top:10px; left:150px;"></canvas>
-<div id="spoilerControl" style="position:absolute; right:20px; bottom:20px; background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
-  <label for="spoilerSlider" style="margin-bottom:8px;">スポイラー展開率</label>
-  <button id="spoilerPlus" style="width:40px; margin-bottom:4px;">＋5</button>
-  <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="writing-mode: vertical-lr; direction: rtl; width: 30px; height: 120px; margin-bottom:4px;">
-  <button id="spoilerMinus" style="width:40px; margin-bottom:8px;">－5</button>
-  <span id="spoilerValue">0</span>%
-</div>
+
+  <div id="spoilerControl" style="position:absolute; right:20px; bottom:20px; background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
+    <label for="spoilerSlider" style="margin-bottom:8px;">スポイラー展開率</label>
+
+    <div id="arrowPad" style="display:flex; flex-direction:column; align-items:center; margin-bottom:8px;">
+      <button id="arrowUp" style="width:36px; height:36px;">▲</button>
+      <div style="display:flex; flex-direction:row; align-items:center;">
+        <button id="arrowLeft" style="width:36px; height:36px;">◀</button>
+        <div style="width:8px;"></div>
+        <button id="arrowRight" style="width:36px; height:36px;">▶</button>
+      </div>
+      <button id="arrowDown" style="width:36px; height:36px;">▼</button>
+    </div>
+
+    <div style="display:flex; flex-direction:row; align-items:center;">
+      <button id="restartBtn" style="width:60px; margin-right:8px;">リスタート</button>
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <button id="spoilerPlus" style="width:40px; margin-bottom:4px;">＋5</button>
+        <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="writing-mode: vertical-lr; direction: rtl; width: 30px; height: 120px; margin-bottom:4px;">
+        <button id="spoilerMinus" style="width:40px; margin-bottom:8px;">－5</button>
+      </div>
+    </div>
+    <span id="spoilerValue">0</span>%
+  </div>
 
 <script>
     const bankCanvas = document.getElementById("bankMeter");
@@ -133,7 +150,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 4`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 5`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -234,6 +251,26 @@
       mapCtx.strokeRect(runway.x, runway.y, runway.width, runway.height);
     }
 
+    const restartBtn = document.getElementById('restartBtn');
+    let updateTimeoutId = null;
+
+    function restart() {
+      bankDeg = 0;
+      stickDeg = 0;
+      pitchDeg = 0;
+      xPos = mapCanvas.width / 2;
+      yPos = mapCanvas.height / 2;
+      altitude = 100;
+      velocity = 100;
+      deg = -90;
+      spoilerSlider.value = 0;
+      spoilerValue.textContent = "0";
+      spoilerRatio = 0.0;
+      info.textContent = "リスタートしました";
+      if (updateTimeoutId) clearTimeout(updateTimeoutId);
+      update();
+    }
+    restartBtn.addEventListener('click', restart);
 
     function update() {
       bankDeg += (stickDeg - 0) / 20;
@@ -290,7 +327,7 @@
         info.textContent += " (安定飛行)";
       } 
 
-      setTimeout(update, updateInterval);
+      updateTimeoutId = setTimeout(update, updateInterval);
     }
 
     window.onload = update;
@@ -317,6 +354,29 @@
       spoilerSlider.value = val;
       spoilerSlider.dispatchEvent(new Event('input'));
     });
+
+  const arrowUp = document.getElementById('arrowUp');
+  const arrowDown = document.getElementById('arrowDown');
+  const arrowLeft = document.getElementById('arrowLeft');
+  const arrowRight = document.getElementById('arrowRight');
+
+  // 上: pitchDegを+2
+  arrowUp.addEventListener('click', function() {
+    pitchDeg += 2;
+  });
+  // 下: pitchDegを-2
+  arrowDown.addEventListener('click', function() {
+    pitchDeg -= 2;
+  });
+  // 左: stickDegを-2
+  arrowLeft.addEventListener('click', function() {
+    stickDeg -= 2;
+  });
+  // 右: stickDegを+2
+  arrowRight.addEventListener('click', function() {
+    stickDeg += 2;
+  });
+
   </script>
 </body>
 </html>
