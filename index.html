@@ -131,6 +131,9 @@
       if( pitchDeg <= -2 ) pitchDeg += 2;
     }
 
+    const bankImg = new Image();
+    bankImg.src = "Glider-back.PNG"; // 画像ファイル名は適宜調整
+
     function drawBankMeter(angle) {
       const cx = bankCanvas.width / 2;
       const cy = bankCanvas.height / 2;
@@ -141,20 +144,33 @@
       bankCtx.strokeStyle = "#666";
       bankCtx.lineWidth = 2;
       bankCtx.stroke();
-      const rad = angle * Math.PI / 180;
-      const dx = Math.cos(rad) * r;
-      const dy = Math.sin(rad) * r;
-      bankCtx.beginPath();
-      bankCtx.moveTo(cx - dx, cy - dy);
-      bankCtx.lineTo(cx + dx, cy + dy);
-      bankCtx.strokeStyle = "green";
-      bankCtx.lineWidth = 3;
-      bankCtx.stroke();
+
+      // 針の代わりに画像を回転描画
+      if (bankImg.complete && bankImg.naturalWidth !== 0) {
+        bankCtx.save();
+        bankCtx.translate(cx, cy);
+        bankCtx.rotate(angle * Math.PI / 180);
+        // 画像サイズを調整（例: 60x60）
+        const imgW = 60, imgH = 60;
+        bankCtx.drawImage(bankImg, -imgW/2, -imgH/2, imgW, imgH);
+        bankCtx.restore();
+      } else {
+        // 画像が未ロード時は針を描画
+        const rad = angle * Math.PI / 180;
+        const dx = Math.cos(rad) * r;
+        const dy = Math.sin(rad) * r;
+        bankCtx.beginPath();
+        bankCtx.moveTo(cx - dx, cy - dy);
+        bankCtx.lineTo(cx + dx, cy + dy);
+        bankCtx.strokeStyle = "green";
+        bankCtx.lineWidth = 3;
+        bankCtx.stroke();
+      }
       bankCtx.font = "14px sans-serif";
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 6`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 7`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
