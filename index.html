@@ -154,7 +154,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 4`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 5`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -450,11 +450,11 @@
 
   // 上: pitchDegを+2
   arrowUp.addEventListener('click', function() {
-    pitchDeg += 2;
+    pitchDeg -= 2;
   });
   // 下: pitchDegを-2
   arrowDown.addEventListener('click', function() {
-    pitchDeg -= 2;
+    pitchDeg += 2;
   });
   // 左: stickDegを-2
   arrowLeft.addEventListener('click', function() {
