@@ -219,7 +219,7 @@
       descentRateCtx.strokeStyle = "#999";
       descentRateCtx.lineWidth = 2;
       descentRateCtx.stroke();
-      const rad = (rate + 90) *20 * Math.PI / 180; //表示20倍
+      const rad = (rate * 20 - 90) * Math.PI / 180; //表示20倍
       const dx = Math.sin(rad) * r;
       const dy = -Math.cos(rad) * r;
       descentRateCtx.beginPath();
@@ -232,7 +232,7 @@
       descentRateCtx.fillStyle = "#000";
       descentRateCtx.textAlign = "center";
       descentRateCtx.fillText(`${(Math.round(rate * 10) / 10).toFixed(1)}m/s`, cx, cy + r - 16);
-      descentRateCtx.fillText(`降下率 2`, cx, cy - r + 25);
+      descentRateCtx.fillText(`降下率 3`, cx, cy - r + 25);
     }
 
 
