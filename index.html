@@ -154,7 +154,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 5`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角 6`, cx, cy - r + 25);
     }
 
     function drawPitchMeter(angle) {
@@ -219,7 +219,7 @@
       descentRateCtx.strokeStyle = "#999";
       descentRateCtx.lineWidth = 2;
       descentRateCtx.stroke();
-      const rad = (rate + 0) *20 * Math.PI / 180; //表示20倍
+      const rad = (rate - 90) *20 * Math.PI / 180; //表示20倍
       const dx = Math.sin(rad) * r;
       const dy = -Math.cos(rad) * r;
       descentRateCtx.beginPath();
