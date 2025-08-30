@@ -594,8 +594,8 @@
   }
 
   function isLandingPosition(x,y){
-    const withinX = x >= rectTarget.x - rectTarget.width && x <= rectTarget.x + 2*rectTarget.width;
-    const withinY = y >= rectTarget.y;
+    const withinX = x >= runway.x - runway.width && x <= runway.x + 2*runway.width;
+    const withinY = y >= runway.y;
     if (withinX && withinY) {
       return true;
     }else{
