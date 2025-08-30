@@ -37,7 +37,7 @@
   <canvas id="pitchMeter" width="80" height="80" style="position:absolute; top:190px; left:10px;"></canvas>
   <canvas id="descentRateMeter" width="80" height="80" style="position:absolute; top:280px; left:10px;"></canvas>
   <canvas id="mapArea" width="400" height="400" style="position:absolute; top:0px; left:100px;"></canvas>
-  <canvas id="approachGraph" width="300" height="100" style="position:absolute; top:500px; left:10px;"></canvas>
+  <canvas id="approachGraph" width="300" height="100" style="position:absolute; top:10px; left:410px;"></canvas>
 
 
 <div id="rightBottomControl" style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
@@ -265,7 +265,7 @@
       descentRateCtx.fillStyle = "#000";
       descentRateCtx.textAlign = "center";
       descentRateCtx.fillText(`${(Math.round(rate * 10) / 10).toFixed(1)}m/s`, cx, cy + r - 16);
-      descentRateCtx.fillText(`降下率 5`, cx, cy - r + 25);
+      descentRateCtx.fillText(`降下率 6`, cx, cy - r + 25);
     }
 
 
@@ -590,6 +590,16 @@
       ctx.beginPath();
       ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fill();
+    }
+  }
+
+  function isLandingPosition(x,y){
+    const withinX = x >= rectTarget.x - rectTarget.width && x <= rectTarget.x + 2*rectTarget.width;
+    const withinY = y >= rectTarget.y;
+    if (withinX && withinY) {
+      return true;
+    }else{
+      return false;
     }
   }
 
