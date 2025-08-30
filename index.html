@@ -170,7 +170,7 @@
       bankCtx.fillStyle = "#000";
       bankCtx.textAlign = "center";
       bankCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 10);
-      bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
+      bankCtx.fillText(`バンク角`, cx, cy - r + 25);
     }
 
   　const PitchImg = new Image();
@@ -212,7 +212,7 @@
       pitchCtx.fillStyle = "#000";
       pitchCtx.textAlign = "center";
       pitchCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 16);
-      pitchCtx.fillText(`ピッチ 2`, cx, cy - r + 25);
+      pitchCtx.fillText(`ピッチ`, cx, cy - r + 25);
     }
 
     function drawStickMeter(angle) {
@@ -238,7 +238,7 @@
       stickCtx.fillStyle = "#000";
       stickCtx.textAlign = "center";
       stickCtx.fillText(`${Math.round(angle)}°`, cx, cy + r - 16);
-      stickCtx.fillText(`桿`, cx, cy - r + 25);
+      stickCtx.fillText(`桿 2`, cx, cy - r + 25);
     }
 
     function drawDescentRateMeter(rate) {
@@ -516,18 +516,18 @@
   function isTouchDown(){
     // 着陸高度でなければ未着陸
     if (altitude > 0) return 0;
-    // 速度超過
-    if (velocity >= 70) return 2;
-    // 進路誤差大（-100°～-80°以外）
-    if (deg <= -100 || deg >= -80) return 3;
     // 滑走路範囲外（x座標）
     const rx = mapCanvas.width / 2 - 10;
     if (xPos < rx || xPos > rx + 20) return 4;
     // 滑走路範囲外（y座標）
     const ry = mapCanvas.height / 2 - 50;
     if (yPos < ry || yPos > ry + 100) return 4;
+    // 速度超過
+    if (velocity >= 70) return 2;
     // 降下率超過
     if (descentRate >= 5.0) return 5;
+    // 進路誤差大（-100°～-80°以外）
+    if (deg <= -100 || deg >= -80) return 3;
     // すべてクリアで着陸OK
     return 1;
   }
