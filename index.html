@@ -37,6 +37,7 @@
   <canvas id="pitchMeter" width="80" height="80" style="position:absolute; top:190px; left:10px;"></canvas>
   <canvas id="descentRateMeter" width="80" height="80" style="position:absolute; top:280px; left:10px;"></canvas>
   <canvas id="mapArea" width="400" height="400" style="position:absolute; top:0px; left:100px;"></canvas>
+  <canvas id="approachGraph" width="300" height="100" style="position:absolute; top:500px; left:10px;"></canvas>
 
 
 <div id="rightBottomControl" style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
@@ -264,7 +265,7 @@
       descentRateCtx.fillStyle = "#000";
       descentRateCtx.textAlign = "center";
       descentRateCtx.fillText(`${(Math.round(rate * 10) / 10).toFixed(1)}m/s`, cx, cy + r - 16);
-      descentRateCtx.fillText(`降下率 4`, cx, cy - r + 25);
+      descentRateCtx.fillText(`降下率 5`, cx, cy - r + 25);
     }
 
 
@@ -374,6 +375,11 @@
       drawPitchMeter(pitchDeg);
       drawDescentRateMeter(descentRate);
       drawGlider();
+            // 仮の滑走路位置（x=300）と現在位置から距離を計算
+      const runwayY = 300;
+      const distanceToRunway = Math.abs(runwayY - yPos); // 実際の地図に合わせて調整
+      drawApproachGraph(distanceToRunway, altitude);
+
       info.innerHTML = `高度: ${Math.round(altitude)}m, 速度: ${Math.round(velocity)}km/h`;
 
       // メッセージ生成
@@ -530,6 +536,61 @@
     if (deg <= -100 || deg >= -80) return 3;
     // すべてクリアで着陸OK
     return 1;
+  }
+  
+  // 降下線
+  function drawApproachGraph(currentDistance, currentAltitude) {
+    const canvas = document.getElementById("approachGraph");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // パラメータ
+    const maxDistance = 300; // m
+    const glideSlopeDeg = 3.0;
+    const glideSlopeRad = glideSlopeDeg * Math.PI / 180;
+    const idealAltAtStart = 80; //Math.tan(glideSlopeRad) * maxDistance;
+    // 軸ラベル
+    ctx.font = "12px sans-serif";
+    ctx.fillStyle = "#333";
+    ctx.fillText("滑走路までの距離 (m)", w / 2 - 60, h - 4);
+    ctx.save();
+    ctx.translate(10, h / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("高度 (m)", 0, 0);
+    ctx.restore();
+
+    // 軸線
+    ctx.strokeStyle = "#aaa";
+    ctx.beginPath();
+    ctx.moveTo(40, 10);
+    ctx.lineTo(40, h - 20);
+    ctx.lineTo(w - 10, h - 20);
+    ctx.stroke();
+
+    // 理想降下線（点線）
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "#00aa00";
+    ctx.beginPath();
+    //ctx.moveTo(40, h - 20 - idealAltAtStart); // 300m手前
+    //ctx.lineTo(w - 10, h - 20); // 滑走路
+    ctx.moveTo(40+50, h - 20); // 300m手前
+    ctx.lineTo(w-10, h - 20 - idealAltAtStart); // 滑走路
+      
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 現在位置（赤丸）
+    //const x = 40 + ((maxDistance - currentDistance) / maxDistance) * (w - 50);
+    if( isLandingPosition(xPos,yPos) ){
+      const x = 40 + ((currentDistance) / maxDistance) * (w - 50) +50;
+      const y = h - 20 - currentAltitude;
+      ctx.fillStyle = "red";
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+    }
   }
 
   </script>
