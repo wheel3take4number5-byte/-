@@ -173,6 +173,8 @@
       bankCtx.fillText(`バンク角 3`, cx, cy - r + 25);
     }
 
+  　const PitchImg = new Image();
+    PitchImg.src = "Glider-Side.png"; // 画像ファイル名は適宜調整
     function drawPitchMeter(angle) {
       const cx = pitchCanvas.width / 2;
       const cy = pitchCanvas.height / 2;
@@ -183,15 +185,29 @@
       pitchCtx.strokeStyle = "#999";
       pitchCtx.lineWidth = 2;
       pitchCtx.stroke();
-      const rad = angle * Math.PI / 180;
-      const dx = Math.sin(rad) * r;
-      const dy = -Math.cos(rad) * r;
-      pitchCtx.beginPath();
-      pitchCtx.moveTo(cx, cy);
-      pitchCtx.lineTo(cx + dx, cy + dy);
-      pitchCtx.strokeStyle = "orange";
-      pitchCtx.lineWidth = 3;
-      pitchCtx.stroke();
+
+
+      // 針の代わりに画像を回転描画
+      if (PitchImg.complete && PitchImg.naturalWidth !== 0) {
+        pitchCtx.save();
+        pitchCtx.translate(cx, cy);
+        pitchCtx.rotate(angle * Math.PI / 180);
+        // 画像サイズを調整（例: 60x60）
+        const imgW = 60, imgH = 60;
+        pitchCtx.drawImage(bankImg, -imgW/2, -imgH/2, imgW, imgH);
+        pitchCtx.restore();
+      } else {
+        // 画像が未ロード時は針を描画
+        const rad = angle * Math.PI / 180;
+        const dx = Math.sin(rad) * r;
+        const dy = -Math.cos(rad) * r;
+        pitchCtx.beginPath();
+        pitchCtx.moveTo(cx, cy);
+        pitchCtx.lineTo(cx + dx, cy + dy);
+        pitchCtx.strokeStyle = "orange";
+        pitchCtx.lineWidth = 3;
+        pitchCtx.stroke();
+      }
       pitchCtx.font = "14px sans-serif";
       pitchCtx.fillStyle = "#000";
       pitchCtx.textAlign = "center";
