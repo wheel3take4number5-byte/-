@@ -38,6 +38,7 @@
   <canvas id="descentRateMeter" width="80" height="80" style="position:absolute; top:280px; left:10px;"></canvas>
   <canvas id="mapArea" width="400" height="400" style="position:absolute; top:0px; left:100px;"></canvas>
   <canvas id="approachGraph" width="300" height="100" style="position:absolute; top:10px; left:510px;"></canvas>
+  <canvas id="frontWindow" width="300" height="300" style="position:absolute; top:120px; left:510px;"></canvas>
 
 
 <div id="rightBottomControl" style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
@@ -83,8 +84,8 @@
     let stickDeg = 0;
     let pitchDeg = 0;
     let xPos = mapCanvas.width / 2;
-    let yPos = mapCanvas.height / 2;
-    let altitude = 100;
+    let yPos = mapCanvas.height*3/4;
+    let altitude = 80;
     let velocity = 100;
     let deg = -90;
     let spoilerRatio = 0.0; // スポイラー展開率（0.0〜1.0）
@@ -322,7 +323,7 @@
       stickDeg = 0;
       pitchDeg = 0;
       xPos = mapCanvas.width / 2;
-      yPos = mapCanvas.height / 2;
+      yPos = mapCanvas.height*3 / 4;
       altitude = 100;
       velocity = 100;
       deg = -90;
@@ -374,9 +375,11 @@
       drawStickMeter(stickDeg);
       drawPitchMeter(pitchDeg);
       drawDescentRateMeter(descentRate);
+      drawfrontWindow();
+
       drawGlider();
             // 仮の滑走路位置（x=300）と現在位置から距離を計算
-      const runwayY = 300;
+      const runwayY = 200;
       const distanceToRunway = Math.abs(runwayY - yPos); // 実際の地図に合わせて調整
       drawApproachGraph(distanceToRunway, altitude);
 
@@ -601,6 +604,80 @@
     }else{
       return false;
     }
+  }
+  function drawfrontWindow() {
+    drawCenterLine(xPos, yPos, altitude, deg, bankDeg, pitchDeg);
+
+  }
+
+  function drawCenterLine(x, y, altitude, deg, bankDeg, pitchDeg) {
+   // if( isLandingPosition(x,y) == false)
+   //   return;
+    const canvas = document.getElementById("frontWindow");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // キャンバス中心
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // --- 地平線 ---
+    const pitchOffset = -pitchDeg * 3;
+    const altOffset = -altitude * 0.3;
+    const horizonY = cy + pitchOffset + altOffset;
+
+    // 地平線の傾き: バンク角で傾ける
+    const bankRad = (bankDeg - 90) * Math.PI / 180;
+    const lineLen = canvas.width;
+    const dx = Math.sin(bankRad) * lineLen / 2;
+    const dy = Math.cos(bankRad) * lineLen / 2;
+
+    ctx.save();
+    ctx.strokeStyle = "#0080ff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - dx, horizonY - dy);
+    ctx.lineTo(cx + dx, horizonY + dy);
+    ctx.stroke();
+    ctx.restore();
+
+    // --- 滑走路台形 ---
+    // 仮の滑走路座標
+    const runwayX = 200;
+    const runwayY = 200;
+    const dxRunway = runwayX - x;
+    const dyRunway = runwayY - y;
+    const distance = Math.sqrt(dxRunway * dxRunway + dyRunway * dyRunway);
+
+    // 距離に応じて滑走路サイズを縮小（近いほど大きく、遠いほど小さく）
+    const minScale = 0.2, maxScale = 3.0;
+    let scale = 1.5 / (distance / 80 + 1); // 係数を調整して近いとき大きく
+    scale = Math.max(minScale, Math.min(maxScale, scale));
+
+    // 台形の手前・奥の幅
+    const rw_near = 40 * scale * 2.5; // 手前（画面下側）をさらに大きく
+    const rw_far = 40 * scale * 0.4; // 奥（画面上側）をさらに小さく
+    const rh = 100 * scale;
+
+    // 横方向のずれ
+    const pxPerMeter = 1.0;
+    const runwayOffsetX = (runwayX - x) * pxPerMeter;
+
+    ctx.save();
+    ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
+    ctx.rotate((deg + 90) * Math.PI / 180);
+
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    // 台形の4点を描画
+    ctx.moveTo(-rw_near / 2, rh / 2); // 左下（手前）
+    ctx.lineTo(rw_near / 2, rh / 2); // 右下（手前）
+    ctx.lineTo(rw_far / 2, -rh / 2); // 右上（奥）
+    ctx.lineTo(-rw_far / 2, -rh / 2); // 左上（奥）
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
   }
 
   </script>
