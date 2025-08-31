@@ -38,7 +38,7 @@
   <canvas id="descentRateMeter" width="80" height="80" style="position:absolute; top:280px; left:10px;"></canvas>
   <canvas id="mapArea" width="400" height="400" style="position:absolute; top:0px; left:100px;"></canvas>
   <canvas id="approachGraph" width="300" height="100" style="position:absolute; top:10px; left:510px;"></canvas>
-  <canvas id="frontWindow" width="300" height="300" style="position:absolute; top:120px; left:510px;"></canvas>
+  <canvas id="frontWindow" width="300" height="280" style="position:absolute; top:120px; left:510px;"></canvas>
 
 
 <div id="rightBottomControl" style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
@@ -354,7 +354,7 @@
       if(bankDeg < -90) bankDeg = -90;
       deg += bankDeg / 5;
       const rad = deg * Math.PI / 180;
-      const speed = velocity / 100 / 2;
+      const speed = velocity / 100 / 1;
       xPos += Math.cos(rad) * speed;
       yPos += Math.sin(rad) * speed;
       if (xPos < 0) xPos = mapCanvas.width;
@@ -611,8 +611,8 @@
   }
 
   function drawCenterLine(x, y, altitude, deg, bankDeg, pitchDeg) {
-   // if( isLandingPosition(x,y) == false)
-   //   return;
+    // if( isLandingPosition(x,y) == false)
+    //   return;
     const canvas = document.getElementById("frontWindow");
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -622,7 +622,7 @@
     const cy = canvas.height / 2;
 
     // --- 地平線 ---
-    const pitchOffset = -pitchDeg * 3;
+    const pitchOffset = pitchDeg;
     const altOffset = -altitude * 0.3;
     const horizonY = cy + pitchOffset + altOffset;
 
@@ -642,24 +642,57 @@
     ctx.restore();
 
     // --- 滑走路台形 ---
-    // 仮の滑走路座標
     const runwayX = 200;
-    const runwayY = 200;
-    const dxRunway = runwayX - x;
-    const dyRunway = runwayY - y;
-    const distance = Math.sqrt(dxRunway * dxRunway + dyRunway * dyRunway);
+    const runwayY = 250;
+    const runwayLength = 100;
+    const dxRunway = x - runwayX;
+    const dyRunway = y - runwayY;
 
-    // 距離に応じて滑走路サイズを縮小（近いほど大きく、遠いほど小さく）
+    // 滑走路手前端と奥端
+    const runwayFrontY = runwayY;
+    const runwayBackY = runwayY - runwayLength;
+
+    // 機体が滑走路奥端より奥に行ったら滑走路を描画しない
+    if (y < runwayBackY) {
+      return;
+    }
+
+    // 距離計算
+    let distanceFront, distanceBack;
+    if (y > runwayFrontY) {
+      // 滑走路手前
+      distanceFront = y - runwayFrontY;
+      distanceBack = y - runwayBackY;
+    } else if (y >= runwayBackY) {
+      // 滑走路内
+      distanceFront = 0;
+      distanceBack = y - runwayBackY;
+    } else {
+      // 滑走路奥
+      distanceFront = 0;
+      distanceBack = 0;
+    }
+
+    // スケールは手前端で最大、奥端が近づくと縮小
     const minScale = 0.2, maxScale = 3.0;
-    let scale = 1.5 / (distance / 80 + 1); // 係数を調整して近いとき大きく
+    let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
     scale = Math.max(minScale, Math.min(maxScale, scale));
 
     // 台形の手前・奥の幅
-    const rw_near = 40 * scale * 2.5; // 手前（画面下側）をさらに大きく
-    const rw_far = 40 * scale * 0.4; // 奥（画面上側）をさらに小さく
-    const rh = 100 * scale;
+    let rw_near = 40 * scale * 2.5;
+    if (rw_near > 298) rw_near = 298;
+    // 奥側は奥端までの距離で縮小
+    let scaleBack = 1.5 / (distanceBack / 160 + 1);
+    scaleBack = Math.max(minScale, Math.min(maxScale, scaleBack));
+    const rw_far = 40 * scaleBack * 0.4;
+    let rh1 = 100 * scale;
+    let rh2 = 100 * scale; //scaleBack;
+    rh1 = rh1 + cy - horizonY;
+    rh2 = rh2 + cy - horizonY;
+    if (rh1 > 278) rh1 = 278;
+    if (rh2 > 278) rh2 = 278;
 
-    // 横方向のずれ
+
     const pxPerMeter = 1.0;
     const runwayOffsetX = (runwayX - x) * pxPerMeter;
 
@@ -667,19 +700,32 @@
     ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
     ctx.rotate((deg + 90) * Math.PI / 180);
 
+    // 滑走路台形
     ctx.strokeStyle = "#444";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    // 台形の4点を描画
-    ctx.moveTo(-rw_near / 2, rh / 2); // 左下（手前）
-    ctx.lineTo(rw_near / 2, rh / 2); // 右下（手前）
-    ctx.lineTo(rw_far / 2, -rh / 2); // 右上（奥）
-    ctx.lineTo(-rw_far / 2, -rh / 2); // 左上（奥）
+    ctx.moveTo(-rw_near / 2, rh1 / 2);
+    ctx.lineTo(rw_near / 2, rh1 / 2);
+    ctx.lineTo(rw_far / 2, -rh2 / 2);
+    ctx.lineTo(-rw_far / 2, -rh2 / 2);
     ctx.closePath();
     ctx.stroke();
+
+    // --- 滑走路中心の一点鎖線 ---
+    ctx.save();
+    ctx.setLineDash([6, 6]);
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, rh1 / 2);      // 台形の手前中央
+    ctx.lineTo(0, -rh2 / 2);     // 台形の奥中央
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
     ctx.restore();
   }
 
-  </script>
+</script>
 </body>
 </html>
