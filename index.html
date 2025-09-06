@@ -83,7 +83,7 @@
     let bankDeg = 0;
     let stickDeg = 0;
     let pitchDeg = 0;
-    let xPos = mapCanvas.width / 2;
+    let xPos = mapCanvas.width / 2 -50;
     let yPos = mapCanvas.height*3/4;
     let altitude = 80;
     let velocity = 100;
@@ -606,8 +606,9 @@
     }
   }
   function drawfrontWindow() {
-    drawCenterLine(xPos, yPos, altitude, deg, bankDeg, pitchDeg);
-
+        if( isLandingPosition(xPos,yPos) ){
+          drawCenterLine(xPos, yPos, altitude, deg, bankDeg, pitchDeg);
+        }
   }
 
   function drawCenterLine(x, y, altitude, deg, bankDeg, pitchDeg) {
@@ -659,14 +660,19 @@
 
     // 距離計算
     let distanceFront, distanceBack;
+    let distanceFrontHight, distanceBackHight;
     if (y > runwayFrontY) {
       // 滑走路手前
       distanceFront = y - runwayFrontY;
+      distanceFrontHight = Math.sqrt(   altitude*altitude + distanceFront*distanceFront );
       distanceBack = y - runwayBackY;
+      distanceBackHight = Math.sqrt(   altitude*altitude + distanceBack*distanceBack );
     } else if (y >= runwayBackY) {
       // 滑走路内
       distanceFront =  y - runwayFrontY;; //0;
+      distanceFrontHight = Math.sqrt(   altitude*altitude + distanceFront*distanceFront );
       distanceBack = y - runwayBackY;
+      distanceBackHight = Math.sqrt(   altitude*altitude + distanceBack*distanceBack );
     } else {
       // 滑走路奥
       distanceFront = 0;
@@ -676,7 +682,7 @@
     // スケールは手前端で最大、奥端が近づくと縮小
     const minScale = 0.2, maxScale = 3.0;
     //let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
-    let scale = 1.5 / (distanceFront / 80 + 1); //1.5 distanceFront 80
+    let scale = 1.5 / (distanceFrontHight / 80 + 1); //1.5 distanceFront 80
     scale = Math.max(minScale, Math.min(maxScale, scale));
 
     // 台形の手前・奥の幅
@@ -684,20 +690,20 @@
     //if (rw_near > 298) rw_near = 298;
     // 奥側は奥端までの距離で縮小
     //let scaleBack = 1.5 / (distanceBack / 160 + 1);
-    let scaleBack = 1.5 / (distanceBack / 80 + 1);
+    let scaleBack = 1.5 / (distanceBackHight / 80 + 1);
     scaleBack = Math.max(minScale, Math.min(maxScale, scaleBack));
     const rw_far = 40 * scaleBack * 2.5;
-    let rh1 = 100 * scale;
-    let rh2 = 100 * scale; //scaleBack;
-    rh1 = canvas.height/2 - distanceFront;
-    rh2 = canvas.height/2 - distanceBack;
+    //let rh1 = 100 * scale;
+    //let rh2 = 100 * scale; //scaleBack;
+    let rh1 = canvas.height/2 - distanceFront;
+    let rh2 = canvas.height/2 - distanceBack;
     //rh1 = rh1 + cy - horizonY;
     //rh2 = rh2 + cy - horizonY;
     //if (rh1 > 278) rh1 = 278;
     //if (rh2 > 278) rh2 = 278;
 
 
-    const pxPerMeter = 1.0;
+    const pxPerMeter = 2.0;
     const runwayOffsetX = (runwayX - x) * pxPerMeter;
 
     ctx.save();
