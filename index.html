@@ -665,7 +665,7 @@
       distanceBack = y - runwayBackY;
     } else if (y >= runwayBackY) {
       // 滑走路内
-      distanceFront = 0;
+      distanceFront =  y - runwayFrontY;; //0;
       distanceBack = y - runwayBackY;
     } else {
       // 滑走路奥
@@ -675,39 +675,44 @@
 
     // スケールは手前端で最大、奥端が近づくと縮小
     const minScale = 0.2, maxScale = 3.0;
-    let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
+    //let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
+    let scale = 1.5 / (distanceFront / 80 + 1); //1.5 distanceFront 80
     scale = Math.max(minScale, Math.min(maxScale, scale));
 
     // 台形の手前・奥の幅
     let rw_near = 40 * scale * 2.5;
-    if (rw_near > 298) rw_near = 298;
+    //if (rw_near > 298) rw_near = 298;
     // 奥側は奥端までの距離で縮小
-    let scaleBack = 1.5 / (distanceBack / 160 + 1);
+    //let scaleBack = 1.5 / (distanceBack / 160 + 1);
+    let scaleBack = 1.5 / (distanceBack / 80 + 1);
     scaleBack = Math.max(minScale, Math.min(maxScale, scaleBack));
-    const rw_far = 40 * scaleBack * 0.4;
+    const rw_far = 40 * scaleBack * 2.5;
     let rh1 = 100 * scale;
     let rh2 = 100 * scale; //scaleBack;
-    rh1 = rh1 + cy - horizonY;
-    rh2 = rh2 + cy - horizonY;
-    if (rh1 > 278) rh1 = 278;
-    if (rh2 > 278) rh2 = 278;
+    rh1 = canvas.height/2 - distanceFront;
+    rh2 = canvas.height/2 - distanceBack;
+    //rh1 = rh1 + cy - horizonY;
+    //rh2 = rh2 + cy - horizonY;
+    //if (rh1 > 278) rh1 = 278;
+    //if (rh2 > 278) rh2 = 278;
 
 
     const pxPerMeter = 1.0;
     const runwayOffsetX = (runwayX - x) * pxPerMeter;
 
     ctx.save();
-    ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
+    //ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
+    ctx.translate(cx + runwayOffsetX, canvas.height/2);
     ctx.rotate((deg + 90) * Math.PI / 180);
 
     // 滑走路台形
     ctx.strokeStyle = "#444";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(-rw_near / 2, rh1 / 2);
-    ctx.lineTo(rw_near / 2, rh1 / 2);
-    ctx.lineTo(rw_far / 2, -rh2 / 2);
-    ctx.lineTo(-rw_far / 2, -rh2 / 2);
+    ctx.moveTo(-rw_near / 2, rh1 );
+    ctx.lineTo(rw_near / 2, rh1 );
+    ctx.lineTo(rw_far / 2, rh2 );
+    ctx.lineTo(-rw_far / 2, rh2 );
     ctx.closePath();
     ctx.stroke();
 
@@ -717,8 +722,8 @@
     ctx.strokeStyle = "#888";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, rh1 / 2);      // 台形の手前中央
-    ctx.lineTo(0, -rh2 / 2);     // 台形の奥中央
+    ctx.moveTo(0, rh1 );      // 台形の手前中央
+    ctx.lineTo(0, rh2 );     // 台形の奥中央
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
