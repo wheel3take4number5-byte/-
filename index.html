@@ -105,6 +105,7 @@
     let spoilerRatio = 0.0; // スポイラー展開率（0.0〜1.0）
     let descentRate = 0;
     const updateInterval = 200;
+    let frontMessage = ""; // 表示用メッセージ（複数行OK）
 
     function handleOrientation(event) {
       pitchDeg = (event.gamma || 0) / -5 - 6;
@@ -405,6 +406,9 @@
       let message = "";
       /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway 5:Descent Rate Over */
       let TDcheck = isTouchDown();
+      if(TDcheck != 0){
+        drawFrontMessage();
+      }
       if (TDcheck == 1) {
         message = `<span style="color:blue; font-weight:bold;">着陸</span>`;
         restartBtn.style.display = "block";
@@ -526,36 +530,55 @@
       return /iPhone|iPad|iPod|Android.*Mobile|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    window.onload = function () {
-      if (isSmartPhone()) {
-        document.getElementById('arrowPad').style.display = "none";
-        document.getElementById('permissionBtn').click();
-        document.getElementById('permissionBtn').style.display = "none";
-      } else {
-        document.getElementById('permissionBtn').style.display = "none";
-        update();
-      }
-    };
+      window.onload = function () {
+        if (isSmartPhone()) {
+          document.getElementById('arrowPad').style.display = "none";
+          document.getElementById('permissionBtn').click();
+          document.getElementById('permissionBtn').style.display = "none";
+        } else {
+          document.getElementById('permissionBtn').style.display = "none";
+          update();
+        }
+      };
 
-    /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
-    function isTouchDown() {
-      // 着陸高度でなければ未着陸
-      if (altitude > 0) return 0;
-      // 滑走路範囲外（x座標）
-      const rx = mapCanvas.width / 2 - 10;
-      if (xPos < rx || xPos > rx + 20) return 4;
-      // 滑走路範囲外（y座標）
-      const ry = mapCanvas.height / 2 - 50;
-      if (yPos < ry || yPos > ry + 100) return 4;
-      // 速度超過
-      if (velocity >= 70) return 2;
-      // 降下率超過
-      if (descentRate >= 5.0) return 5;
-      // 進路誤差大（-100°～-80°以外）
-      if (deg <= -100 || deg >= -80) return 3;
-      // すべてクリアで着陸OK
-      return 1;
-    }
+      /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
+      function isTouchDown() {
+        let ret = 1;
+        // 着陸高度でなければ未着陸
+        if (altitude > 0) return 0;
+        frontMessage = "着地...\n";
+        // 滑走路範囲外（x座標）
+        const rx = mapCanvas.width / 2 - 10;
+        if (xPos < rx || xPos > rx + 20) {
+          frontMessage += "滑走路範囲外X \n";
+          ret = 4;
+        }
+        // 滑走路範囲外（y座標）
+        const ry = mapCanvas.height / 2 - 50;
+        if (yPos < ry || yPos > ry + 100) {
+          frontMessage += "滑走路範囲外Y \n";
+          ret = 4;
+        }
+        // 速度超過
+        if (velocity >= 70) {
+          frontMessage += "速度超過（70Km/h以下）: " + Math.round(velocity) + "km/h\n";
+          ret = 2;
+        }
+        // 降下率超過
+        if (descentRate >= 5.0) {
+          frontMessage += "降下率超過（5m/s以下）: " + (Math.round(descentRate * 10) / 10).toFixed(1) + "m/s\n";
+          ret = 5;
+        }
+        // 進路誤差大（-100°～-80°以外）
+        if (deg <= -100 || deg >= -80) {
+          frontMessage += "進路誤差大（-100°～-80°）: " + Math.round(deg) + "°\n";
+          ret = 3;
+        }
+        // すべてクリアで着陸OK
+        if(ret == 1)
+          frontMessage += "着陸成功！\n"; 
+        return ret;
+      }
 
     // 降下線
     function drawApproachGraph(currentDistance, currentAltitude) {
@@ -748,7 +771,24 @@
 
       ctx.restore();
     }
+  function drawFrontMessage() {
+    const canvas = document.getElementById("frontWindow");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "left";
+
+    const lines = frontMessage.split("\n"); // 改行で分割
+    const lineHeight = 24;
+    const startX = 10;
+    const startY = 30;
+
+    lines.forEach((line, index) => {
+      ctx.fillText(line, startX, startY + index * lineHeight);
+    });
+  }
   </script>
 </body>
 
