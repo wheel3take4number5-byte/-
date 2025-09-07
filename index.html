@@ -367,6 +367,8 @@
       if (bankDeg > 90) bankDeg = 90;
       if (bankDeg < -90) bankDeg = -90;
       deg += bankDeg / 5;
+      if (deg > 180) deg -= 360;
+      if (deg < -180) deg += 360;
       const rad = deg * Math.PI / 180;
       const speed = velocity / 100 / 1;
       xPos += Math.cos(rad) * speed;
@@ -613,7 +615,8 @@
     function isLandingPosition(x, y) {
       const withinX = x >= runway.x - runway.width && x <= runway.x + 2 * runway.width;
       const withinY = y >= runway.y;
-      if (withinX && withinY) {
+      const withinDir = deg >= -120 && deg <= -60;
+      if (withinX && withinY && withinDir) {
         return true;
       } else {
         return false;
@@ -646,7 +649,7 @@
       // --- 地平線 ---
       const pitchOffset = pitchDeg;
       const altOffset = -altitude * 0.3;
-      const horizonY = cy + pitchOffset + altOffset;
+      const horizonY = cy*3/4 + pitchOffset + altOffset;
 
       // 地平線の傾き: バンク角で傾ける
       const bankRad = (bankDeg - 90) * Math.PI / 180;
@@ -702,33 +705,21 @@
 
       // スケールは手前端で最大、奥端が近づくと縮小
       const minScale = 0.2, maxScale = 3.0;
-      //let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
       let scale = 1.5 / (distanceFrontHight / 80 + 1); //1.5 distanceFront 80
       scale = Math.max(minScale, Math.min(maxScale, scale));
 
       // 台形の手前・奥の幅
       let rw_near = 40 * scale * 2.5;
-      //if (rw_near > 298) rw_near = 298;
-      // 奥側は奥端までの距離で縮小
-      //let scaleBack = 1.5 / (distanceBack / 160 + 1);
       let scaleBack = 1.5 / (distanceBackHight / 80 + 1);
       scaleBack = Math.max(minScale, Math.min(maxScale, scaleBack));
       const rw_far = 40 * scaleBack * 2.5;
-      //let rh1 = 100 * scale;
-      //let rh2 = 100 * scale; //scaleBack;
       let rh1 = canvas.height / 2 - distanceFront;
       let rh2 = canvas.height / 2 - distanceBack;
-      //rh1 = rh1 + cy - horizonY;
-      //rh2 = rh2 + cy - horizonY;
-      //if (rh1 > 278) rh1 = 278;
-      //if (rh2 > 278) rh2 = 278;
-
 
       const pxPerMeter = 2.0;
       const runwayOffsetX = (runwayX - x) * pxPerMeter;
 
       ctx.save();
-      //ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
       ctx.translate(cx + runwayOffsetX, canvas.height / 2);
       ctx.rotate((deg + 90) * Math.PI / 180);
 
