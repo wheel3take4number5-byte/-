@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Glider Viewer</title>
   <style>
-    body { margin: 0; background: #fff; font-family: sans-serif; }
-    canvas { border: 1px solid #ccc; }
+    body {
+      margin: 0;
+      background: #fff;
+      font-family: sans-serif;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+    }
+
     #info {
       position: absolute;
       top: 10px;
@@ -16,6 +25,7 @@
       border-radius: 4px;
       font-size: 14px;
     }
+
     #permissionBtn {
       position: absolute;
       bottom: 10px;
@@ -29,6 +39,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="info">状態: 初期化中</div>
   <button id="permissionBtn">センサー許可 </button>
@@ -41,32 +52,35 @@
   <canvas id="frontWindow" width="300" height="280" style="position:absolute; top:120px; left:510px;"></canvas>
 
 
-<div id="rightBottomControl" style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
-  <!-- 矢印キー -->
-  <div id="arrowPad" style="display:flex; flex-direction:column; align-items:center; margin-bottom:0;">
-    <button id="arrowUp" style="width:36px; height:36px;">▲</button>
-    <div style="display:flex; flex-direction:row; align-items:center;">
-      <button id="arrowLeft" style="width:36px; height:36px;">◀</button>
-      <div style="width:8px;"></div>
-      <button id="arrowRight" style="width:36px; height:36px;">▶</button>
+  <div id="rightBottomControl"
+    style="position:absolute; right:20px; bottom:20px; display:flex; flex-direction:row; align-items:flex-end; gap:16px;">
+    <!-- 矢印キー -->
+    <div id="arrowPad" style="display:flex; flex-direction:column; align-items:center; margin-bottom:0;">
+      <button id="arrowUp" style="width:36px; height:36px;">▲</button>
+      <div style="display:flex; flex-direction:row; align-items:center;">
+        <button id="arrowLeft" style="width:36px; height:36px;">◀</button>
+        <div style="width:8px;"></div>
+        <button id="arrowRight" style="width:36px; height:36px;">▶</button>
+      </div>
+      <button id="arrowDown" style="width:36px; height:36px;">▼</button>
     </div>
-    <button id="arrowDown" style="width:36px; height:36px;">▼</button>
+    <!-- リスタートボタン -->
+    <button id="restartBtn" style="width:60px; height:60px; margin-bottom:0; display:none;">リスタート</button>
+    <!-- スポイラーコントロール -->
+    <div id="spoilerControl"
+      style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
+      <label for="spoilerSlider" style="margin-bottom:8px;">spoiler</label>
+      <button id="spoilerPlus" style="width:40px; margin-bottom:4px;">＋5</button>
+      <input type="range" id="spoilerSlider" min="0" max="100" value="0"
+        style="writing-mode: vertical-lr; direction: rtl; width: 30px; height: 60px; margin-bottom:4px;">
+      <button id="spoilerMinus" style="width:40px; margin-bottom:8px;">－5</button>
+      <span id="spoilerValue">0</span>%
+    </div>
   </div>
-  <!-- リスタートボタン -->
-  <button id="restartBtn" style="width:60px; height:60px; margin-bottom:0; display:none;">リスタート</button>
-  <!-- スポイラーコントロール -->
-  <div id="spoilerControl" style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; display:flex; flex-direction:column; align-items:center;">
-    <label for="spoilerSlider" style="margin-bottom:8px;">spoiler</label>
-    <button id="spoilerPlus" style="width:40px; margin-bottom:4px;">＋5</button>
-    <input type="range" id="spoilerSlider" min="0" max="100" value="0" style="writing-mode: vertical-lr; direction: rtl; width: 30px; height: 60px; margin-bottom:4px;">
-    <button id="spoilerMinus" style="width:40px; margin-bottom:8px;">－5</button>
-    <span id="spoilerValue">0</span>%
-  </div>
-</div>
 
 
 
-<script>
+  <script>
     const bankCanvas = document.getElementById("bankMeter");
     const bankCtx = bankCanvas.getContext("2d");
     const stickCanvas = document.getElementById("stickMeter");
@@ -83,11 +97,11 @@
     let bankDeg = 0;
     let stickDeg = 0;
     let pitchDeg = 0;
-    let xPos = mapCanvas.width / 2 -50;
-    let yPos = mapCanvas.height*3/4;
-    let altitude = 80;
+    let xPos = Math.random() *  mapCanvas.width;
+    let yPos = Math.random() * mapCanvas.height;
+    let altitude = Math.floor(Math.random() * 40) + 80; 
     let velocity = 100;
-    let deg = -90;
+    let deg = Math.floor(Math.random() * 360) - 180;;
     let spoilerRatio = 0.0; // スポイラー展開率（0.0〜1.0）
     let descentRate = 0;
     const updateInterval = 200;
@@ -99,7 +113,7 @@
 
     permissionBtn.onclick = () => {
       if (typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then(response => {
             if (response === 'granted') {
@@ -123,14 +137,14 @@
 
     function handleOrientation(event) {
       console.log("gamma:", event.gamma, "beta:", event.beta);
-      pitchDeg = (event.gamma ?? 0)/-5 - 6;
+      pitchDeg = (event.gamma ?? 0) / -5 - 6;
       stickDeg = (event.beta ?? 90);
-      if( stickDeg < 2 && stickDeg > -2 ) stickDeg = 0;
-      if( stickDeg >= 2 ) stickDeg -= 2;
-      if( stickDeg <= -2 ) stickDeg += 2;
-      if( pitchDeg < 2 && pitchDeg > -2 ) pitchDeg = 0;
-      if( pitchDeg >= 2 ) pitchDeg -= 2;
-      if( pitchDeg <= -2 ) pitchDeg += 2;
+      if (stickDeg < 2 && stickDeg > -2) stickDeg = 0;
+      if (stickDeg >= 2) stickDeg -= 2;
+      if (stickDeg <= -2) stickDeg += 2;
+      if (pitchDeg < 2 && pitchDeg > -2) pitchDeg = 0;
+      if (pitchDeg >= 2) pitchDeg -= 2;
+      if (pitchDeg <= -2) pitchDeg += 2;
     }
 
     const bankImg = new Image();
@@ -154,7 +168,7 @@
         bankCtx.rotate(angle * Math.PI / 180);
         // 画像サイズを調整（例: 60x60）
         const imgW = 60, imgH = 60;
-        bankCtx.drawImage(bankImg, -imgW/2, -imgH/2, imgW, imgH);
+        bankCtx.drawImage(bankImg, -imgW / 2, -imgH / 2, imgW, imgH);
         bankCtx.restore();
       } else {
         // 画像が未ロード時は針を描画
@@ -175,7 +189,7 @@
       bankCtx.fillText(`バンク角`, cx, cy - r + 25);
     }
 
-  　const PitchImg = new Image();
+    const PitchImg = new Image();
     PitchImg.src = "Glider-Side.png"; // 画像ファイル名は適宜調整
     function drawPitchMeter(angle) {
       const cx = pitchCanvas.width / 2;
@@ -196,7 +210,7 @@
         pitchCtx.rotate(angle * Math.PI / 180);
         // 画像サイズを調整（例: 60x60）
         const imgW = 60, imgH = 60;
-        pitchCtx.drawImage(PitchImg, -imgW/2, -imgH/2, imgW, imgH);
+        pitchCtx.drawImage(PitchImg, -imgW / 2, -imgH / 2, imgW, imgH);
         pitchCtx.restore();
       } else {
         // 画像が未ロード時は針を描画
@@ -223,11 +237,11 @@
       const r = stickCanvas.height / 2;
       stickCtx.clearRect(0, 0, stickCanvas.width, stickCanvas.height);
       stickCtx.beginPath();
-      stickCtx.arc(cx, cy, r, Math.PI, Math.PI * 2,false);
+      stickCtx.arc(cx, cy, r, Math.PI, Math.PI * 2, false);
       stickCtx.strokeStyle = "#999";
       stickCtx.lineWidth = 2;
       stickCtx.stroke();
-      const rad = (angle + 0) *5 * Math.PI / 180; //表示５倍
+      const rad = (angle + 0) * 5 * Math.PI / 180; //表示５倍
       const dx = Math.sin(rad) * r;
       const dy = -Math.cos(rad) * r;
       stickCtx.beginPath();
@@ -249,7 +263,7 @@
       const r = descentRateCanvas.height / 2;
       descentRateCtx.clearRect(0, 0, descentRateCanvas.width, descentRateCanvas.height);
       descentRateCtx.beginPath();
-      descentRateCtx.arc(cx, cy, r, 0, Math.PI * 2,false);
+      descentRateCtx.arc(cx, cy, r, 0, Math.PI * 2, false);
       descentRateCtx.strokeStyle = "#999";
       descentRateCtx.lineWidth = 2;
       descentRateCtx.stroke();
@@ -289,8 +303,8 @@
         const imgW = 32, imgH = 32; // 画像サイズに合わせて調整
         mapCtx.save();
         mapCtx.translate(xPos, yPos);
-        mapCtx.rotate((deg+90) * Math.PI / 180); // degで回転
-        mapCtx.drawImage(planeImg, -imgW/2, -imgH/2, imgW, imgH);
+        mapCtx.rotate((deg + 90) * Math.PI / 180); // degで回転
+        mapCtx.drawImage(planeImg, -imgW / 2, -imgH / 2, imgW, imgH);
         mapCtx.restore();
       } else {
         // 画像がまだ読み込まれていない場合は丸を描画
@@ -322,11 +336,11 @@
       bankDeg = 0;
       stickDeg = 0;
       pitchDeg = 0;
-      xPos = mapCanvas.width / 2;
-      yPos = mapCanvas.height*3 / 4;
-      altitude = 100;
+      xPos = Math.random() * mapCanvas.width;
+      yPos = Math.random() * mapCanvas.height;
+      altitude = Math.floor(Math.random() * 40) + 80;
       velocity = 100;
-      deg = -90;
+      deg = Math.floor(Math.random() * 360) - 180;;
       spoilerSlider.value = 0;
       spoilerValue.textContent = "0";
       spoilerRatio = 0.0;
@@ -350,8 +364,8 @@
 
     function update() {
       bankDeg += (stickDeg - 0) / 20;
-      if(bankDeg > 90) bankDeg = 90;
-      if(bankDeg < -90) bankDeg = -90;
+      if (bankDeg > 90) bankDeg = 90;
+      if (bankDeg < -90) bankDeg = -90;
       deg += bankDeg / 5;
       const rad = deg * Math.PI / 180;
       const speed = velocity / 100 / 1;
@@ -378,7 +392,7 @@
       drawfrontWindow();
 
       drawGlider();
-            // 仮の滑走路位置（x=300）と現在位置から距離を計算
+      // 仮の滑走路位置（x=300）と現在位置から距離を計算
       const runwayY = 200;
       const distanceToRunway = Math.abs(runwayY - yPos); // 実際の地図に合わせて調整
       drawApproachGraph(distanceToRunway, altitude);
@@ -421,33 +435,33 @@
       }
 
       // 通常時のメッセージ
-      if(altitude < 0) {
+      if (altitude < 0) {
         message = "着陸しました";
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
-      } else if(altitude < 20) {
+      } else if (altitude < 20) {
         message = "高度注意";
-      } else if(altitude > 300) {
+      } else if (altitude > 300) {
         message = "高度オーバー";
-      } else if(velocity < 40) {
+      } else if (velocity < 40) {
         message = "失速";
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
         return;
-      } else if(velocity < 50) {
+      } else if (velocity < 50) {
         message = "失速注意";
-      } else if(Math.abs(bankDeg) > 45) {
+      } else if (Math.abs(bankDeg) > 45) {
         message = "横転注意";
-      } else if(Math.abs(bankDeg) > 30) {
+      } else if (Math.abs(bankDeg) > 30) {
         message = "バンク注意";
-      } else if(Math.abs(pitchDeg) > 20) {
+      } else if (Math.abs(pitchDeg) > 20) {
         message = "ピッチ注意";
-      } else if(Math.abs(pitchDeg) > 10) {
+      } else if (Math.abs(pitchDeg) > 10) {
         message = "ピッチ大";
-      } else if(Math.abs(pitchDeg) > 5) {
+      } else if (Math.abs(pitchDeg) > 5) {
         message = "ピッチ中";
-      } else if(Math.abs(pitchDeg) > 2) {
+      } else if (Math.abs(pitchDeg) > 2) {
         message = "ピッチ小";
       } else {
         message = "安定飛行";
@@ -463,280 +477,288 @@
     const spoilerPlus = document.getElementById('spoilerPlus');
     const spoilerMinus = document.getElementById('spoilerMinus');
 
-    spoilerSlider.addEventListener('input', function() {
+    spoilerSlider.addEventListener('input', function () {
       spoilerValue.textContent = spoilerSlider.value;
       spoilerRatio = spoilerSlider.value;
     });
 
 
 
-    spoilerPlus.addEventListener('click', function() {
+    spoilerPlus.addEventListener('click', function () {
       let val = parseInt(spoilerSlider.value, 10) + 5;
-      if(val > 100) val = 100;
+      if (val > 100) val = 100;
       spoilerSlider.value = val;
       spoilerSlider.dispatchEvent(new Event('input'));
     });
 
-    spoilerMinus.addEventListener('click', function() {
+    spoilerMinus.addEventListener('click', function () {
       let val = parseInt(spoilerSlider.value, 10) - 5;
-      if(val < 0) val = 0;
+      if (val < 0) val = 0;
       spoilerSlider.value = val;
       spoilerSlider.dispatchEvent(new Event('input'));
     });
 
-  const arrowUp = document.getElementById('arrowUp');
-  const arrowDown = document.getElementById('arrowDown');
-  const arrowLeft = document.getElementById('arrowLeft');
-  const arrowRight = document.getElementById('arrowRight');
+    const arrowUp = document.getElementById('arrowUp');
+    const arrowDown = document.getElementById('arrowDown');
+    const arrowLeft = document.getElementById('arrowLeft');
+    const arrowRight = document.getElementById('arrowRight');
 
-  // 上: pitchDegを+2
-  arrowUp.addEventListener('click', function() {
-    pitchDeg -= 2;
-  });
-  // 下: pitchDegを-2
-  arrowDown.addEventListener('click', function() {
-    pitchDeg += 2;
-  });
-  // 左: stickDegを-2
-  arrowLeft.addEventListener('click', function() {
-    stickDeg -= 2;
-  });
-  // 右: stickDegを+2
-  arrowRight.addEventListener('click', function() {
-    stickDeg += 2;
-  });
+    // 上: pitchDegを+2
+    arrowUp.addEventListener('click', function () {
+      pitchDeg -= 2;
+    });
+    // 下: pitchDegを-2
+    arrowDown.addEventListener('click', function () {
+      pitchDeg += 2;
+    });
+    // 左: stickDegを-2
+    arrowLeft.addEventListener('click', function () {
+      stickDeg -= 2;
+    });
+    // 右: stickDegを+2
+    arrowRight.addEventListener('click', function () {
+      stickDeg += 2;
+    });
 
-  function isSmartPhone() {
-    return /iPhone|iPad|iPod|Android.*Mobile|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
+    function isSmartPhone() {
+      return /iPhone|iPad|iPod|Android.*Mobile|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
 
-  window.onload = function() {
-    if (isSmartPhone()) {
-      document.getElementById('arrowPad').style.display = "none";
-      document.getElementById('permissionBtn').click();
-      document.getElementById('permissionBtn').style.display = "none";
-    } else {
-      document.getElementById('permissionBtn').style.display = "none";
-      update();
-    }  
-  };
+    window.onload = function () {
+      if (isSmartPhone()) {
+        document.getElementById('arrowPad').style.display = "none";
+        document.getElementById('permissionBtn').click();
+        document.getElementById('permissionBtn').style.display = "none";
+      } else {
+        document.getElementById('permissionBtn').style.display = "none";
+        update();
+      }
+    };
 
-  /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
-  function isTouchDown(){
-    // 着陸高度でなければ未着陸
-    if (altitude > 0) return 0;
-    // 滑走路範囲外（x座標）
-    const rx = mapCanvas.width / 2 - 10;
-    if (xPos < rx || xPos > rx + 20) return 4;
-    // 滑走路範囲外（y座標）
-    const ry = mapCanvas.height / 2 - 50;
-    if (yPos < ry || yPos > ry + 100) return 4;
-    // 速度超過
-    if (velocity >= 70) return 2;
-    // 降下率超過
-    if (descentRate >= 5.0) return 5;
-    // 進路誤差大（-100°～-80°以外）
-    if (deg <= -100 || deg >= -80) return 3;
-    // すべてクリアで着陸OK
-    return 1;
-  }
-  
-  // 降下線
-  function drawApproachGraph(currentDistance, currentAltitude) {
-    const canvas = document.getElementById("approachGraph");
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
+    /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
+    function isTouchDown() {
+      // 着陸高度でなければ未着陸
+      if (altitude > 0) return 0;
+      // 滑走路範囲外（x座標）
+      const rx = mapCanvas.width / 2 - 10;
+      if (xPos < rx || xPos > rx + 20) return 4;
+      // 滑走路範囲外（y座標）
+      const ry = mapCanvas.height / 2 - 50;
+      if (yPos < ry || yPos > ry + 100) return 4;
+      // 速度超過
+      if (velocity >= 70) return 2;
+      // 降下率超過
+      if (descentRate >= 5.0) return 5;
+      // 進路誤差大（-100°～-80°以外）
+      if (deg <= -100 || deg >= -80) return 3;
+      // すべてクリアで着陸OK
+      return 1;
+    }
 
-    // パラメータ
-    const maxDistance = 300; // m
-    const glideSlopeDeg = 3.0;
-    const glideSlopeRad = glideSlopeDeg * Math.PI / 180;
-    const idealAltAtStart = 80; //Math.tan(glideSlopeRad) * maxDistance;
-    // 軸ラベル
-    ctx.font = "12px sans-serif";
-    ctx.fillStyle = "#333";
-    ctx.fillText("滑走路までの距離 (m)", w / 2 - 60, h - 4);
-    ctx.save();
-    ctx.translate(10, h / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText("高度 (m)", 0, 0);
-    ctx.restore();
+    // 降下線
+    function drawApproachGraph(currentDistance, currentAltitude) {
+      const canvas = document.getElementById("approachGraph");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
 
-    // 軸線
-    ctx.strokeStyle = "#aaa";
-    ctx.beginPath();
-    ctx.moveTo(40, 10);
-    ctx.lineTo(40, h - 20);
-    ctx.lineTo(w - 10, h - 20);
-    ctx.stroke();
+      // パラメータ
+      const maxDistance = 300; // m
+      const glideSlopeDeg = 3.0;
+      const glideSlopeRad = glideSlopeDeg * Math.PI / 180;
+      const idealAltAtStart = 80; //Math.tan(glideSlopeRad) * maxDistance;
+      // 軸ラベル
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = "#333";
+      ctx.fillText("滑走路までの距離 (m)", w / 2 - 60, h - 4);
+      ctx.save();
+      ctx.translate(10, h / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("高度 (m)", 0, 0);
+      ctx.restore();
 
-    // 理想降下線（点線）
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = "#00aa00";
-    ctx.beginPath();
-    //ctx.moveTo(40, h - 20 - idealAltAtStart); // 300m手前
-    //ctx.lineTo(w - 10, h - 20); // 滑走路
-    ctx.moveTo(40+50, h - 20); // 300m手前
-    ctx.lineTo(w-10, h - 20 - idealAltAtStart); // 滑走路
-      
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 現在位置（赤丸）
-    //const x = 40 + ((maxDistance - currentDistance) / maxDistance) * (w - 50);
-    if( isLandingPosition(xPos,yPos) ){
-      const x = 40 + ((currentDistance) / maxDistance) * (w - 50) +50;
-      const y = h - 20 - currentAltitude;
-      ctx.fillStyle = "red";
+      // 軸線
+      ctx.strokeStyle = "#aaa";
       ctx.beginPath();
-      ctx.arc(x, y, 5, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-  }
+      ctx.moveTo(40, 10);
+      ctx.lineTo(40, h - 20);
+      ctx.lineTo(w - 10, h - 20);
+      ctx.stroke();
 
-  function isLandingPosition(x,y){
-    const withinX = x >= runway.x - runway.width && x <= runway.x + 2*runway.width;
-    const withinY = y >= runway.y;
-    if (withinX && withinY) {
-      return true;
-    }else{
-      return false;
-    }
-  }
-  function drawfrontWindow() {
-        if( isLandingPosition(xPos,yPos) ){
-          drawCenterLine(xPos, yPos, altitude, deg, bankDeg, pitchDeg);
-        }
-  }
+      // 理想降下線（点線）
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = "#00aa00";
+      ctx.beginPath();
+      //ctx.moveTo(40, h - 20 - idealAltAtStart); // 300m手前
+      //ctx.lineTo(w - 10, h - 20); // 滑走路
+      ctx.moveTo(40 + 50, h - 20); // 300m手前
+      ctx.lineTo(w - 10, h - 20 - idealAltAtStart); // 滑走路
 
-  function drawCenterLine(x, y, altitude, deg, bankDeg, pitchDeg) {
-    // if( isLandingPosition(x,y) == false)
-    //   return;
-    const canvas = document.getElementById("frontWindow");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    // キャンバス中心
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    // --- 地平線 ---
-    const pitchOffset = pitchDeg;
-    const altOffset = -altitude * 0.3;
-    const horizonY = cy + pitchOffset + altOffset;
-
-    // 地平線の傾き: バンク角で傾ける
-    const bankRad = (bankDeg - 90) * Math.PI / 180;
-    const lineLen = canvas.width;
-    const dx = Math.sin(bankRad) * lineLen / 2;
-    const dy = Math.cos(bankRad) * lineLen / 2;
-
-    ctx.save();
-    ctx.strokeStyle = "#0080ff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(cx - dx, horizonY - dy);
-    ctx.lineTo(cx + dx, horizonY + dy);
-    ctx.stroke();
-    ctx.restore();
-
-    // --- 滑走路台形 ---
-    const runwayX = 200;
-    const runwayY = 250;
-    const runwayLength = 100;
-    const dxRunway = x - runwayX;
-    const dyRunway = y - runwayY;
-
-    // 滑走路手前端と奥端
-    const runwayFrontY = runwayY;
-    const runwayBackY = runwayY - runwayLength;
-
-    // 機体が滑走路奥端より奥に行ったら滑走路を描画しない
-    if (y < runwayBackY) {
-      return;
+      // 現在位置（赤丸）
+      //const x = 40 + ((maxDistance - currentDistance) / maxDistance) * (w - 50);
+      if (isLandingPosition(xPos, yPos)) {
+        const x = 40 + ((currentDistance) / maxDistance) * (w - 50) + 50;
+        const y = h - 20 - currentAltitude;
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
     }
 
-    // 距離計算
-    let distanceFront, distanceBack;
-    let distanceFrontHight, distanceBackHight;
-    if (y > runwayFrontY) {
-      // 滑走路手前
-      distanceFront = y - runwayFrontY;
-      distanceFrontHight = Math.sqrt(   altitude*altitude + distanceFront*distanceFront );
-      distanceBack = y - runwayBackY;
-      distanceBackHight = Math.sqrt(   altitude*altitude + distanceBack*distanceBack );
-    } else if (y >= runwayBackY) {
-      // 滑走路内
-      distanceFront =  y - runwayFrontY;; //0;
-      distanceFrontHight = Math.sqrt(   altitude*altitude + distanceFront*distanceFront );
-      distanceBack = y - runwayBackY;
-      distanceBackHight = Math.sqrt(   altitude*altitude + distanceBack*distanceBack );
-    } else {
-      // 滑走路奥
-      distanceFront = 0;
-      distanceBack = 0;
+    function isLandingPosition(x, y) {
+      const withinX = x >= runway.x - runway.width && x <= runway.x + 2 * runway.width;
+      const withinY = y >= runway.y;
+      if (withinX && withinY) {
+        return true;
+      } else {
+        return false;
+      }
     }
 
-    // スケールは手前端で最大、奥端が近づくと縮小
-    const minScale = 0.2, maxScale = 3.0;
-    //let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
-    let scale = 1.5 / (distanceFrontHight / 80 + 1); //1.5 distanceFront 80
-    scale = Math.max(minScale, Math.min(maxScale, scale));
+    function drawfrontWindow() {
+      if (isLandingPosition(xPos, yPos)) {
+        drawCenterLine(xPos, yPos, altitude, deg, bankDeg, pitchDeg);
+      } else {
+        clearFrontWindow();
+      }
+    }
+    function clearFrontWindow() {
+      const canvas = document.getElementById("frontWindow");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    function drawCenterLine(x, y, altitude, deg, bankDeg, pitchDeg) {
+      // if( isLandingPosition(x,y) == false)
+      //   return;
+      const canvas = document.getElementById("frontWindow");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 台形の手前・奥の幅
-    let rw_near = 40 * scale * 2.5;
-    //if (rw_near > 298) rw_near = 298;
-    // 奥側は奥端までの距離で縮小
-    //let scaleBack = 1.5 / (distanceBack / 160 + 1);
-    let scaleBack = 1.5 / (distanceBackHight / 80 + 1);
-    scaleBack = Math.max(minScale, Math.min(maxScale, scaleBack));
-    const rw_far = 40 * scaleBack * 2.5;
-    //let rh1 = 100 * scale;
-    //let rh2 = 100 * scale; //scaleBack;
-    let rh1 = canvas.height/2 - distanceFront;
-    let rh2 = canvas.height/2 - distanceBack;
-    //rh1 = rh1 + cy - horizonY;
-    //rh2 = rh2 + cy - horizonY;
-    //if (rh1 > 278) rh1 = 278;
-    //if (rh2 > 278) rh2 = 278;
+      // キャンバス中心
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // --- 地平線 ---
+      const pitchOffset = pitchDeg;
+      const altOffset = -altitude * 0.3;
+      const horizonY = cy + pitchOffset + altOffset;
+
+      // 地平線の傾き: バンク角で傾ける
+      const bankRad = (bankDeg - 90) * Math.PI / 180;
+      const lineLen = canvas.width;
+      const dx = Math.sin(bankRad) * lineLen / 2;
+      const dy = Math.cos(bankRad) * lineLen / 2;
+
+      ctx.save();
+      ctx.strokeStyle = "#0080ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - dx, horizonY - dy);
+      ctx.lineTo(cx + dx, horizonY + dy);
+      ctx.stroke();
+      ctx.restore();
+
+      // --- 滑走路台形 ---
+      const runwayX = 200;
+      const runwayY = 250;
+      const runwayLength = 100;
+      const dxRunway = x - runwayX;
+      const dyRunway = y - runwayY;
+
+      // 滑走路手前端と奥端
+      const runwayFrontY = runwayY;
+      const runwayBackY = runwayY - runwayLength;
+
+      // 機体が滑走路奥端より奥に行ったら滑走路を描画しない
+      if (y < runwayBackY) {
+        return;
+      }
+
+      // 距離計算
+      let distanceFront, distanceBack;
+      let distanceFrontHight, distanceBackHight;
+      if (y > runwayFrontY) {
+        // 滑走路手前
+        distanceFront = y - runwayFrontY;
+        distanceFrontHight = Math.sqrt(altitude * altitude + distanceFront * distanceFront);
+        distanceBack = y - runwayBackY;
+        distanceBackHight = Math.sqrt(altitude * altitude + distanceBack * distanceBack);
+      } else if (y >= runwayBackY) {
+        // 滑走路内
+        distanceFront = y - runwayFrontY;; //0;
+        distanceFrontHight = Math.sqrt(altitude * altitude + distanceFront * distanceFront);
+        distanceBack = y - runwayBackY;
+        distanceBackHight = Math.sqrt(altitude * altitude + distanceBack * distanceBack);
+      } else {
+        // 滑走路奥
+        distanceFront = 0;
+        distanceBack = 0;
+      }
+
+      // スケールは手前端で最大、奥端が近づくと縮小
+      const minScale = 0.2, maxScale = 3.0;
+      //let scale = 1.5 / (distanceBack / 80 + 1); //1.5 distanceFront 80
+      let scale = 1.5 / (distanceFrontHight / 80 + 1); //1.5 distanceFront 80
+      scale = Math.max(minScale, Math.min(maxScale, scale));
+
+      // 台形の手前・奥の幅
+      let rw_near = 40 * scale * 2.5;
+      //if (rw_near > 298) rw_near = 298;
+      // 奥側は奥端までの距離で縮小
+      //let scaleBack = 1.5 / (distanceBack / 160 + 1);
+      let scaleBack = 1.5 / (distanceBackHight / 80 + 1);
+      scaleBack = Math.max(minScale, Math.min(maxScale, scaleBack));
+      const rw_far = 40 * scaleBack * 2.5;
+      //let rh1 = 100 * scale;
+      //let rh2 = 100 * scale; //scaleBack;
+      let rh1 = canvas.height / 2 - distanceFront;
+      let rh2 = canvas.height / 2 - distanceBack;
+      //rh1 = rh1 + cy - horizonY;
+      //rh2 = rh2 + cy - horizonY;
+      //if (rh1 > 278) rh1 = 278;
+      //if (rh2 > 278) rh2 = 278;
 
 
-    const pxPerMeter = 2.0;
-    const runwayOffsetX = (runwayX - x) * pxPerMeter;
+      const pxPerMeter = 2.0;
+      const runwayOffsetX = (runwayX - x) * pxPerMeter;
 
-    ctx.save();
-    //ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
-    ctx.translate(cx + runwayOffsetX, canvas.height/2);
-    ctx.rotate((deg + 90) * Math.PI / 180);
+      ctx.save();
+      //ctx.translate(cx + runwayOffsetX, cy + 60 * scale);
+      ctx.translate(cx + runwayOffsetX, canvas.height / 2);
+      ctx.rotate((deg + 90) * Math.PI / 180);
 
-    // 滑走路台形
-    ctx.strokeStyle = "#444";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(-rw_near / 2, rh1 );
-    ctx.lineTo(rw_near / 2, rh1 );
-    ctx.lineTo(rw_far / 2, rh2 );
-    ctx.lineTo(-rw_far / 2, rh2 );
-    ctx.closePath();
-    ctx.stroke();
+      // 滑走路台形
+      ctx.strokeStyle = "#444";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-rw_near / 2, rh1);
+      ctx.lineTo(rw_near / 2, rh1);
+      ctx.lineTo(rw_far / 2, rh2);
+      ctx.lineTo(-rw_far / 2, rh2);
+      ctx.closePath();
+      ctx.stroke();
 
-    // --- 滑走路中心の一点鎖線 ---
-    ctx.save();
-    ctx.setLineDash([6, 6]);
-    ctx.strokeStyle = "#888";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, rh1 );      // 台形の手前中央
-    ctx.lineTo(0, rh2 );     // 台形の奥中央
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
+      // --- 滑走路中心の一点鎖線 ---
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = "#888";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, rh1);      // 台形の手前中央
+      ctx.lineTo(0, rh2);     // 台形の奥中央
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
 
-    ctx.restore();
-  }
+      ctx.restore();
+    }
 
-</script>
+  </script>
 </body>
+
 </html>
