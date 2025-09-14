@@ -77,6 +77,10 @@
       <span id="spoilerValue">0</span>%
     </div>
   </div>
+  <div id="modeSelector" style="position:absolute; top:410px; left:10px; z-index:1000;">
+    <label><input type="radio" name="controlMode" value="pico"> Pico制御</label>
+    <label><input type="radio" name="controlMode" value="pc" checked> PC制御</label>
+  </div>
 
 
 
@@ -97,19 +101,49 @@
     let bankDeg = 0;
     let stickDeg = 0;
     let pitchDeg = 0;
-    let xPos = Math.random() *  mapCanvas.width;
+    let xPos = Math.random() * mapCanvas.width;
     let yPos = Math.random() * mapCanvas.height;
-    let altitude = Math.floor(Math.random() * 40) + 80; 
+    let altitude = Math.floor(Math.random() * 40) + 80;
     let velocity = 100;
     let deg = Math.floor(Math.random() * 360) - 180;;
     let spoilerRatio = 0.0; // スポイラー展開率（0.0〜1.0）
     let descentRate = 0;
     const updateInterval = 200;
     let frontMessage = ""; // 表示用メッセージ（複数行OK）
+    let controlMode = "pc"; // "pc" または "pico"
 
     function handleOrientation(event) {
       pitchDeg = (event.gamma || 0) / -5 - 6;
       stickDeg = (event.beta || 90);
+    }
+
+
+    document.querySelectorAll('input[name="controlMode"]').forEach(el => {
+      el.addEventListener('change', e => {
+        controlMode = e.target.value;
+        switchControlMode(e.target.value);
+      });
+    });
+
+    function switchControlMode(newMode) {
+      controlMode = newMode;
+
+      // ① 既存ループを止める
+      if (updateTimeoutId !== null) {
+        clearTimeout(updateTimeoutId);
+        updateTimeoutId = null;
+      }
+      if (picoTimeoutId !== null) {
+        clearTimeout(picoTimeoutId);
+        picoTimeoutId = null;
+      }
+
+      // ② 新しいモードに応じて開始
+      if (controlMode === "pc") {
+        update();
+      } else if (controlMode === "pico") {
+        PicoControlLoop();
+      }
     }
 
     permissionBtn.onclick = () => {
@@ -120,7 +154,16 @@
             if (response === 'granted') {
               window.addEventListener("deviceorientation", handleOrientation);
               permissionBtn.style.display = "none";
-              update(); // ← 許可後に開始
+              if (controlMode === "pc") {
+                update();
+                if (picoTimeoutId !== null) {
+                  clearTimeout(picoTimeoutId);
+                  picoTimeoutId = null;
+                }
+
+              } else if (controlMode === "pico") {
+                PicoControlLoop();
+              }
             } else {
               alert("センサーの許可が必要です");
             }
@@ -364,6 +407,44 @@
     }
 
     function update() {
+      if (CommonUpdate()) {
+        updateTimeoutId = setTimeout(update, updateInterval);
+      } else {
+        clearTimeout(updateTimeoutId);
+        updateTimeoutId = null;
+      }
+    }
+    let picoTimeoutId = null;
+
+    function PicoControlLoop() {
+      fetch("http://192.168.10.107/status")
+        .then(res => res.json())
+        .then(data => {
+          stickDeg = mapToDegrees(data.value)/2;
+          pitchDeg = mapToPitch(data.pitch);
+          spoilerRatio = data.spoiler_ratio / 65535.0 * 100;
+          spoilerSlider.value = spoilerRatio;
+          spoilerSlider.dispatchEvent(new Event('input'));
+
+          if (CommonUpdate()) {
+            picoTimeoutId = setTimeout(PicoControlLoop, updateInterval);
+          } else {
+            // 着陸終了
+            if (picoTimeoutId !== null) {
+              clearTimeout(picoTimeoutId);
+              picoTimeoutId = null;
+            }
+          }
+
+        })
+        .catch(err => {
+          console.error("fetch error:", err);
+          setTimeout(PicoControlLoop, 500); // 通信失敗時は遅延
+        });
+    }
+
+    function CommonUpdate() {
+      // retunr true:飛行継続　false:着陸終了
       bankDeg += (stickDeg - 0) / 20;
       if (bankDeg > 90) bankDeg = 90;
       if (bankDeg < -90) bankDeg = -90;
@@ -406,38 +487,38 @@
       let message = "";
       /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway 5:Descent Rate Over */
       let TDcheck = isTouchDown();
-      if(TDcheck != 0){
+      if (TDcheck != 0) {
         drawFrontMessage();
       }
       if (TDcheck == 1) {
         message = `<span style="color:blue; font-weight:bold;">着陸</span>`;
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       }
       if (TDcheck == 4) {
         message = `<span style="color:red; font-weight:bold;">滑走路外</span>`;
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       }
       if (TDcheck == 2) {
         message = `<span style="color:red; font-weight:bold;">速度超過(70Km/h)</span>`;
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       }
       if (TDcheck == 5) {
         message = `<span style="color:red; font-weight:bold;">降下率超過(5m/s)</span>`;
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       }
       if (TDcheck == 3) {
         message = `<span style="color:red; font-weight:bold;">進路誤差大(±10°)</span>`;
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       }
 
       // 通常時のメッセージ
@@ -445,7 +526,7 @@
         message = "着陸しました";
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       } else if (altitude < 20) {
         message = "高度注意";
       } else if (altitude > 300) {
@@ -454,7 +535,7 @@
         message = "失速";
         restartBtn.style.display = "block";
         info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
-        return;
+        return false;
       } else if (velocity < 50) {
         message = "失速注意";
       } else if (Math.abs(bankDeg) > 45) {
@@ -474,8 +555,15 @@
       }
 
       info.innerHTML = `高度: ${Math.round(altitude)}m<br>速度: ${Math.round(velocity)}km/h<br>${message}`;
+      return true;
+    }
 
-      updateTimeoutId = setTimeout(update, updateInterval);
+
+    function mapToDegrees(val) {
+      return (val / 65535) * 90 + 135 - 180;
+    }
+    function mapToPitch(val) {
+      return (val / 65535) * 40 - 20;
     }
 
     const spoilerSlider = document.getElementById('spoilerSlider');
@@ -504,81 +592,86 @@
       spoilerSlider.dispatchEvent(new Event('input'));
     });
 
-    const arrowUp = document.getElementById('arrowUp');
-    const arrowDown = document.getElementById('arrowDown');
-    const arrowLeft = document.getElementById('arrowLeft');
-    const arrowRight = document.getElementById('arrowRight');
+    if (controlMode === "pc") {
+      const arrowUp = document.getElementById('arrowUp');
+      const arrowDown = document.getElementById('arrowDown');
+      const arrowLeft = document.getElementById('arrowLeft');
+      const arrowRight = document.getElementById('arrowRight');
 
-    // 上: pitchDegを+2
-    arrowUp.addEventListener('click', function () {
-      pitchDeg -= 2;
-    });
-    // 下: pitchDegを-2
-    arrowDown.addEventListener('click', function () {
-      pitchDeg += 2;
-    });
-    // 左: stickDegを-2
-    arrowLeft.addEventListener('click', function () {
-      stickDeg -= 2;
-    });
-    // 右: stickDegを+2
-    arrowRight.addEventListener('click', function () {
-      stickDeg += 2;
-    });
-
+      // 上: pitchDegを+2
+      arrowUp.addEventListener('click', function () {
+        pitchDeg -= 2;
+      });
+      // 下: pitchDegを-2
+      arrowDown.addEventListener('click', function () {
+        pitchDeg += 2;
+      });
+      // 左: stickDegを-2
+      arrowLeft.addEventListener('click', function () {
+        stickDeg -= 2;
+      });
+      // 右: stickDegを+2
+      arrowRight.addEventListener('click', function () {
+        stickDeg += 2;
+      });
+    }
     function isSmartPhone() {
       return /iPhone|iPad|iPod|Android.*Mobile|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-      window.onload = function () {
-        if (isSmartPhone()) {
-          document.getElementById('arrowPad').style.display = "none";
-          document.getElementById('permissionBtn').click();
-          document.getElementById('permissionBtn').style.display = "none";
-        } else {
-          document.getElementById('permissionBtn').style.display = "none";
+    window.onload = function () {
+      if (isSmartPhone()) {
+        document.getElementById('arrowPad').style.display = "none";
+        document.getElementById('permissionBtn').click();
+        document.getElementById('permissionBtn').style.display = "none";
+      } else {
+        document.getElementById('permissionBtn').style.display = "none";
+        if (controlMode === "pc") {
           update();
+        } else if (controlMode === "pico") {
+          PicoControlLoop();
         }
-      };
-
-      /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
-      function isTouchDown() {
-        let ret = 1;
-        // 着陸高度でなければ未着陸
-        if (altitude > 0) return 0;
-        frontMessage = "着地...\n";
-        // 滑走路範囲外（x座標）
-        const rx = mapCanvas.width / 2 - 10;
-        if (xPos < rx || xPos > rx + 20) {
-          frontMessage += "滑走路範囲外X \n";
-          ret = 4;
-        }
-        // 滑走路範囲外（y座標）
-        const ry = mapCanvas.height / 2 - 50;
-        if (yPos < ry || yPos > ry + 100) {
-          frontMessage += "滑走路範囲外Y \n";
-          ret = 4;
-        }
-        // 速度超過
-        if (velocity >= 70) {
-          frontMessage += "速度超過（70Km/h以下）: " + Math.round(velocity) + "km/h\n";
-          ret = 2;
-        }
-        // 降下率超過
-        if (descentRate >= 5.0) {
-          frontMessage += "降下率超過（5m/s以下）: " + (Math.round(descentRate * 10) / 10).toFixed(1) + "m/s\n";
-          ret = 5;
-        }
-        // 進路誤差大（-100°～-80°以外）
-        if (deg <= -100 || deg >= -80) {
-          frontMessage += "進路誤差大（-100°～-80°）: " + Math.round(deg) + "°\n";
-          ret = 3;
-        }
-        // すべてクリアで着陸OK
-        if(ret == 1)
-          frontMessage += "着陸成功！\n"; 
-        return ret;
       }
+    };
+
+    /* 0:Not TouchDown 1:TouchDown OK 2:Over Speed 3:Out of Deg 4:Out of Runway */
+    function isTouchDown() {
+      let ret = 1;
+      // 着陸高度でなければ未着陸
+      if (altitude > 0) return 0;
+      frontMessage = "着地...\n";
+      // 滑走路範囲外（x座標）
+      const rx = mapCanvas.width / 2 - 10;
+      if (xPos < rx || xPos > rx + 20) {
+        frontMessage += "滑走路範囲外X \n";
+        ret = 4;
+      }
+      // 滑走路範囲外（y座標）
+      const ry = mapCanvas.height / 2 - 50;
+      if (yPos < ry || yPos > ry + 100) {
+        frontMessage += "滑走路範囲外Y \n";
+        ret = 4;
+      }
+      // 速度超過
+      if (velocity >= 70) {
+        frontMessage += "速度超過（70Km/h以下）: " + Math.round(velocity) + "km/h\n";
+        ret = 2;
+      }
+      // 降下率超過
+      if (descentRate >= 5.0) {
+        frontMessage += "降下率超過（5m/s以下）: " + (Math.round(descentRate * 10) / 10).toFixed(1) + "m/s\n";
+        ret = 5;
+      }
+      // 進路誤差大（-100°～-80°以外）
+      if (deg <= -100 || deg >= -80) {
+        frontMessage += "進路誤差大（-100°～-80°）: " + Math.round(deg) + "°\n";
+        ret = 3;
+      }
+      // すべてクリアで着陸OK
+      if (ret == 1)
+        frontMessage += "着陸成功！\n";
+      return ret;
+    }
 
     // 降下線
     function drawApproachGraph(currentDistance, currentAltitude) {
@@ -672,7 +765,7 @@
       // --- 地平線 ---
       const pitchOffset = pitchDeg;
       const altOffset = -altitude * 0.3;
-      const horizonY = cy*3/4 + pitchOffset + altOffset;
+      const horizonY = cy * 3 / 4 + pitchOffset + altOffset;
 
       // 地平線の傾き: バンク角で傾ける
       const bankRad = (bankDeg - 90) * Math.PI / 180;
@@ -771,24 +864,24 @@
 
       ctx.restore();
     }
-  function drawFrontMessage() {
-    const canvas = document.getElementById("frontWindow");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function drawFrontMessage() {
+      const canvas = document.getElementById("frontWindow");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.font = "16px sans-serif";
-    ctx.fillStyle = "#000";
-    ctx.textAlign = "left";
+      ctx.font = "16px sans-serif";
+      ctx.fillStyle = "#000";
+      ctx.textAlign = "left";
 
-    const lines = frontMessage.split("\n"); // 改行で分割
-    const lineHeight = 24;
-    const startX = 10;
-    const startY = 30;
+      const lines = frontMessage.split("\n"); // 改行で分割
+      const lineHeight = 24;
+      const startX = 10;
+      const startY = 30;
 
-    lines.forEach((line, index) => {
-      ctx.fillText(line, startX, startY + index * lineHeight);
-    });
-  }
+      lines.forEach((line, index) => {
+        ctx.fillText(line, startX, startY + index * lineHeight);
+      });
+    }
   </script>
 </body>
 
