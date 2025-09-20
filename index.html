@@ -78,6 +78,7 @@
     </div>
   </div>
   <div id="modeSelector" style="position:absolute; top:410px; left:10px; z-index:1000;">
+    <label><input type="radio" name="controlMode" value="auto" checked> 自動</label>
     <label><input type="radio" name="controlMode" value="pico"> Pico制御</label>
     <label><input type="radio" name="controlMode" value="pc" checked> PC制御</label>
   </div>
@@ -139,45 +140,45 @@
       }
 
       // ② 新しいモードに応じて開始
-      if (controlMode === "pc") {
+      if (controlMode === "pc" || controlMode === "auto") {
         update();
       } else if (controlMode === "pico") {
         PicoControlLoop();
       }
-    }
 
-    permissionBtn.onclick = () => {
-      if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then(response => {
-            if (response === 'granted') {
-              window.addEventListener("deviceorientation", handleOrientation);
-              permissionBtn.style.display = "none";
-              if (controlMode === "pc") {
-                update();
-                if (picoTimeoutId !== null) {
-                  clearTimeout(picoTimeoutId);
-                  picoTimeoutId = null;
+      permissionBtn.onclick = () => {
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission()
+            .then(response => {
+              if (response === 'granted') {
+                window.addEventListener("deviceorientation", handleOrientation);
+                permissionBtn.style.display = "none";
+                if (controlMode === "pc") {
+                  update();
+                  if (picoTimeoutId !== null) {
+                    clearTimeout(picoTimeoutId);
+                    picoTimeoutId = null;
+                  }
+
+                } else if (controlMode === "pico") {
+                  PicoControlLoop();
                 }
-
-              } else if (controlMode === "pico") {
-                PicoControlLoop();
+              } else {
+                alert("センサーの許可が必要です");
               }
-            } else {
-              alert("センサーの許可が必要です");
-            }
-          })
-          .catch(err => {
-            console.error("センサー許可エラー:", err);
-            alert("センサー許可に失敗しました");
-          });
-      } else {
-        window.addEventListener("deviceorientation", handleOrientation);
-        permissionBtn.style.display = "none";
-        update(); // ← Androidなどは即開始
-      }
-    };
+            })
+            .catch(err => {
+              console.error("センサー許可エラー:", err);
+              alert("センサー許可に失敗しました");
+            });
+        } else {
+          window.addEventListener("deviceorientation", handleOrientation);
+          permissionBtn.style.display = "none";
+          update(); // ← Androidなどは即開始
+        }
+      };
+    }
 
     function handleOrientation(event) {
       console.log("gamma:", event.gamma, "beta:", event.beta);
@@ -407,6 +408,7 @@
     }
 
     function update() {
+      if (controlMode === "auto") AutoModeControl();
       if (CommonUpdate()) {
         updateTimeoutId = setTimeout(update, updateInterval);
       } else {
@@ -420,7 +422,7 @@
       fetch("http://192.168.10.107/status")
         .then(res => res.json())
         .then(data => {
-          stickDeg = mapToDegrees(data.value)/2;
+          stickDeg = mapToDegrees(data.value) / 2;
           pitchDeg = mapToPitch(data.pitch);
           spoilerRatio = data.spoiler_ratio / 65535.0 * 100;
           spoilerSlider.value = spoilerRatio;
@@ -443,6 +445,7 @@
         });
     }
 
+    let speed;
     function CommonUpdate() {
       // retunr true:飛行継続　false:着陸終了
       bankDeg += (stickDeg - 0) / 20;
@@ -452,7 +455,7 @@
       if (deg > 180) deg -= 360;
       if (deg < -180) deg += 360;
       const rad = deg * Math.PI / 180;
-      const speed = velocity / 100 / 1;
+      speed = velocity / 100 / 1;
       xPos += Math.cos(rad) * speed;
       yPos += Math.sin(rad) * speed;
       if (xPos < 0) xPos = mapCanvas.width;
@@ -882,6 +885,141 @@
         ctx.fillText(line, startX, startY + index * lineHeight);
       });
     }
+    let AutoStep = 0;
+    let GolXPos, GolYPos, GoalDeg;
+    function AutoModeControl() {
+      // 自動操縦モード
+      if (AutoStep == 0) {
+        if (xPos > mapCanvas.width / 2) AutoStep = 10;
+        else AutoStep = 20;
+      }
+      if (AutoStep == 10 || AutoStep == 20) {
+        if (AutoStep == 10) {
+          GolXPos = 300;
+          GolYPos = 350;
+          if (calDistance(xPos, yPos, GolXPos, GolYPos) < 30) AutoStep = 11;
+        } else {
+          GolXPos = 100;
+          GolYPos = 350;
+          if (calDistance(xPos, yPos, GolXPos, GolYPos) < 30) AutoStep = 21;
+        }
+        stickControl();
+      }
+      if (AutoStep == 11 || AutoStep == 21) {
+        if (AutoStep == 11) {
+          GolXPos = 250;
+          GolYPos = 325;
+          if (calDistance(xPos, yPos, GolXPos, GolYPos) < 30) AutoStep = 100;
+        } else {
+          GolXPos = 150;
+          GolYPos = 325;
+          if (calDistance(xPos, yPos, GolXPos, GolYPos) < 30) AutoStep = 100;
+        }
+        stickControl();
+      }
+      if (AutoStep == 100) {
+        GolXPos = 200;
+        GolYPos = 300;
+        if (calDistance(xPos, yPos, GolXPos, GolYPos) < 30) AutoStep = 101;
+        stickControl();
+        spoilerControl();
+      }
+      if (AutoStep == 101) {
+        GolXPos = 200;
+        GolYPos = 200;
+        stickControl();
+        spoilerControl();
+        pitchControl();
+      }
+    }
+    /*
+     // 滑走路位置
+     const runwayX = mapCanvas.width / 2;
+     const runwayY = mapCanvas.height / 2;
+     const dx = runwayX - xPos;
+     const dy = runwayY - yPos;
+     const targetDeg = Math.atan2(dy, dx) * 180 / Math.PI; // -180～180
+     let degDiff = targetDeg - deg;
+     if (degDiff > 180) degDiff -= 360;
+     if (degDiff < -180) degDiff += 360;
+
+     // バンク制御
+     if (Math.abs(degDiff) > 5) {
+       if (degDiff > 0) {
+         stickDeg = 10; // 左旋回
+       } else {
+         stickDeg = -10; // 右旋回
+       }
+     } else {
+       stickDeg = 0; // 中立
+     }
+
+     // ピッチ制御
+     if (altitude > 100) {
+       pitchDeg = 5; // 上昇
+     } else if (altitude > 50) {
+       pitchDeg = 0; // 水平
+     } else {
+       pitchDeg = -5; // 降下
+     }
+
+     // スポイラー制御
+     if (velocity > 80) {
+       spoilerRatio = 50; // 中程度展開
+     } else if (velocity > 60) {
+       spoilerRatio = 20; // 少し展開
+     } else {
+       spoilerRatio = 0; // 格納
+     }
+     spoilerSlider.value = spoilerRatio;
+     spoilerSlider.dispatchEvent(new Event('input'));
+
+
+  } 
+*/
+    function calDistance(x1, y1, x2, y2) {
+      return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+    }
+
+    function stickControl() {
+      const dx = GolXPos - xPos;
+      const dy = GolYPos - yPos;
+      const rad = Math.atan2(dy, dx); // ラジアンで角度を取得（-π〜π）
+      GolDeg = rad * 180 / Math.PI; // 度数に変換（-180〜180）
+      let degDiff = GolDeg - deg;
+      if (degDiff > 180) degDiff -= 360;
+      if (degDiff < -180) degDiff += 360;
+      const GolBank = Math.max(-10, Math.min(10, degDiff));
+      stickDeg = GolBank - bankDeg;
+    }
+
+    function pitchControl() {
+      if (velocity > 80)
+        pitchDeg = 5; // 上昇
+      else if (velocity > 45)
+        pitchDeg = 0; // 水平
+      else
+        pitchDeg = -5; // 降下
+    }
+
+    let oldAltitude = altitude;
+    let oldDistance = 0;
+    let dis;
+    function spoilerControl() {
+      if (oldDistance != 0) {
+        dis = calDistance(xPos, yPos, GolXPos, GolYPos);
+        if ((oldAltitude - altitude) / (oldDistance - dis) < 1) {
+          spoilerRatio += 1;
+          if (spoilerRatio > 100) spoilerRatio = 100;
+        } else {
+          spoilerRatio -= 1;
+        }
+        spoilerSlider.value = spoilerRatio;
+        spoilerSlider.dispatchEvent(new Event('input'));
+      }
+      oldDistance = dis;
+      oldAltitude = altitude;
+    } 
   </script>
 </body>
 
